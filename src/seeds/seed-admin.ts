@@ -1,19 +1,19 @@
 // src/seeds/seed-admin.ts
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { Admin } from '../modules/admin/entities/admin.entity';
+import { AdminEntity } from '../modules/admin/entities/admin.entity';
 import { config } from 'dotenv';
 config(); // Load biến môi trường từ .env
 
 // Khởi tạo DataSource thủ công (không dùng AppModule)
 const dataSource = new DataSource({
   type: 'mysql',
-  host: process.env.DATABASE_HOST,
-  port: process.env.DATABASE_PORT || 3306,
-  username: process.env.DATABASE_USER,
-  password: process.env.DATABASE_PASSWORD,
-  database: process.env.DATABASE_NAME,
-  entities: [Admin],
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT!, 10),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  entities: [AdminEntity],
   synchronize: false,
 });
 
