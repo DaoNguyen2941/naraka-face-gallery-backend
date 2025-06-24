@@ -19,7 +19,7 @@ const dataSource = new DataSource({
 
 async function seedAdmin() {
   await dataSource.initialize();
-  const adminRepository = dataSource.getRepository(Admin);
+  const adminRepository = dataSource.getRepository(AdminEntity);
 
   const email = 'admin@example.com';
   const existing = await adminRepository.findOne({ where: { email } });
@@ -34,7 +34,7 @@ async function seedAdmin() {
 
   const admin = adminRepository.create({
     email,
-    password: hashed,
+    passwordHash: hashed,
     username: 'superadmin',
   });
 
