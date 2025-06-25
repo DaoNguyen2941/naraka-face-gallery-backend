@@ -2,13 +2,14 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { CharacterEntity } from './entitys/character.entity';
-import { CreateCharacterDto, UpdateCharacterDto } from './dtos';
+import { CreateCharacterDto, UpdateCharacterDto, DataCharacterDto } from './dtos';
 import { StorageService } from '../object-storage/storage.service';
 import {
     generateFaceStorageKey,
     generateCharacterAvatarKey,
 } from 'src/utils/generate-face-key.util';
 import slugify from 'slugify';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class CharactersService {
@@ -37,10 +38,10 @@ export class CharactersService {
         return character;
     }
 
-    async create(data: CreateCharacterDto, file: Express.Multer.File): Promise<any> {
+    async create(data: CreateCharacterDto, file: Express.Multer.File): Promise<DataCharacterDto> {
         const existing = await this.characterRepo.findOne({ where: { name: data.name } });
         if (existing) {
-            throw new ConflictException(`Nhân vật "${data.name}" đã tồn tại`);
+            throw new ConflictException(`Nhân vật ${data.name} đã tồn tại`);
         }
         const slug = slugify(data.name, { lower: true });
         const key = generateCharacterAvatarKey(slug, file.originalname);
@@ -49,22 +50,42 @@ export class CharactersService {
             ...data,
             avatar: fileUpload.url, // hoặc key nếu bạn muốn lưu path
         });
-          return this.characterRepo.save(character);
+        const newCharacter = await this.characterRepo.save(character);
+        return plainToInstance(DataCharacterDto, newCharacter, {
+            excludeExtraneousValues: true,
+        })
     }
 
-    async update(id: string, dto: UpdateCharacterDto): Promise<CharacterEntity> {
+    async update(
+        id: string,
+        data: UpdateCharacterDto,
+        file?: Express.Multer.File,
+    ): Promise<DataCharacterDto> {
         const character = await this.findOne(id);
+        const newName = data.name || character.name;
 
-        if (dto.name && dto.name !== character.name) {
-            const existing = await this.characterRepo.findOne({ where: { name: dto.name } });
+        if (data.name && data.name !== character.name) {
+            const existing = await this.characterRepo.findOne({ where: { name: data.name } });
             if (existing && existing.id !== id) {
-                throw new ConflictException(`Tên nhân vật "${dto.name}" đã tồn tại`);
+                throw new ConflictException(`Tên nhân vật "${data.name}" đã tồn tại`);
             }
         }
 
-        Object.assign(character, dto);
-        return this.characterRepo.save(character);
+        if (file) {
+            const slug = slugify(newName, { lower: true });
+            const key = generateCharacterAvatarKey(slug, file.originalname);
+            const avatar = await this.storageService.uploadImage(file, key);
+            character.avatar = avatar.url;
+        }
+
+        Object.assign(character, data);
+
+        const updated = await this.characterRepo.save(character);
+        return plainToInstance(DataCharacterDto, updated, {
+            excludeExtraneousValues: true,
+        });
     }
+
 
     async remove(id: string): Promise<void> {
         const character = await this.findOne(id);

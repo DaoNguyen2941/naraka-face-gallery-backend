@@ -52,4 +52,24 @@ export class StorageService {
       throw new InternalServerErrorException('Failed to upload image');
     }
   }
+
+  async deleteFile(key: string): Promise<void> {
+    try {
+      const bucketName = this.configService.get('cfR2.bucketName');
+
+      // 1. Xóa trên R2
+      await this.s3.send(
+        new DeleteObjectCommand({
+          Bucket: bucketName,
+          Key: key,
+        }),
+      );
+
+      await this.filesRepository.delete({ key });
+    } catch (error) {
+      console.error('Delete image failed:', error);
+      throw new InternalServerErrorException('Failed to delete image');
+    }
+  }
+
 }
