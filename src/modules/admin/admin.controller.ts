@@ -23,7 +23,6 @@ export class AdminController {
     @Post('/auth/login')
     async login(@Request() request: CustomAdminInRequest) {
         const admin = request.user;
-        console.log(admin);
         const { accessTokenCookie, token } = this.authService.createAuthCookie(admin);
         const { RefreshTokenCookie, refreshToken } = this.authService.createRefreshCookie(admin)
         request.res.setHeader('Set-Cookie', [accessTokenCookie, RefreshTokenCookie]);
@@ -31,6 +30,10 @@ export class AdminController {
             message: 'login successfully',
             token: token
         };
+    }
+    @Get('/data')
+    getdata(@Request() request: CustomAdminInRequest) {
+        return (request.user)
     }
 
 }

@@ -2,7 +2,7 @@ import { Entity, Column, ManyToMany, ManyToOne, JoinTable } from 'typeorm';
 import { CategoryEntity } from '../../categories/entitys/category.entity';
 import { CharacterEntity } from '../../characters/entitys/character.entity';
 import { BaseEntity } from '../../../../common/entities/base.entity';
-import { FileEntity } from 'src/modules/core/file/entitys/file.entity';
+import { FileEntity } from 'src/modules/core/object-storage/entitys/file.entity';
 import { TagEntity } from '../../tag/entitys/tag.entity';
 
 @Entity('faces')

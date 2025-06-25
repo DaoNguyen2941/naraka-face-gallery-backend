@@ -1,20 +1,29 @@
 import { Module } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AdminController } from './admin.controller';
-import { LocalStrategy } from './auth/strategies/local.strategy';
-import { AuthService } from './auth/auth.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminEntity } from './entitys/admin.entity';
+import { AdminAuthModule } from './auth/adminAuth.module';
+import { AdminCharactersController } from './characters/characters.controller';
+import { AdminCharactersModule } from './characters/admin-characters.module';
+import { CharactersModule } from '../core/characters/characters.module';
+import { StorageModule } from '../core/object-storage/object-storage.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AdminEntity]),
+    AdminAuthModule,
+    AdminCharactersModule,
+    CharactersModule,
+    StorageModule
   ],
-  controllers: [AdminController],
+  controllers: [
+    AdminController,
+    AdminCharactersController
+  ],
   providers: [
     AdminService,
-    AuthService,
-    LocalStrategy,
   ],
+    exports: [AdminService], 
 })
 export class AdminModule { }

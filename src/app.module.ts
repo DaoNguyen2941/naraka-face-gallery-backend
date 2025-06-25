@@ -5,6 +5,7 @@ import { jwtConstants } from './config/constants/jwt.constants';
 import { AdminModule } from './modules/admin/admin.module';
 import { PassportModule } from '@nestjs/passport';
 import { DatabaseModule } from './database/database.module';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { DatabaseModule } from './database/database.module';
     AdminModule,
   ],
   providers: [
-
+    JwtService
   ]
 })
 export class AppModule { }
