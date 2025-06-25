@@ -6,7 +6,7 @@ import { Expose } from 'class-transformer';
 export class CustomAdminInRequest extends Request {
     @Expose()
     @IsNotEmpty()
-    admin: AdminDataDto;
+    user: AdminDataDto;
 
     @Expose()
     res: Response;

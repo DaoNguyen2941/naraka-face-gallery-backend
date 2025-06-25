@@ -11,6 +11,7 @@ export class BasicAdminDataDto {
     @IsNotEmpty()
     username: string;
 
+    @Expose()
     @IsString()
     @IsNotEmpty()
     passwordHash: string;

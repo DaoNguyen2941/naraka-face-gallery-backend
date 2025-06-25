@@ -34,10 +34,12 @@ export class AuthService {
         }
     }
 
-    public createAuthCookie(userData: AdminDataDto) {
+    public createAuthCookie(adminData: AdminDataDto) {
+        console.log(adminData);
+        
         const payload: JWTPayload = {
-            sub: userData.id,
-            username: userData.username,
+            sub: adminData.id,
+            username: adminData.username,
         };
         const token = this.jwtService.sign(payload);
         const cookie = createCookie('Authentication', token, '/', jwtConstants.expirationTimeDefault)
@@ -47,14 +49,14 @@ export class AuthService {
         }
     }
 
-    async validateAdmin(username: string, pass: string): Promise<BasicAdminDataDto | null> {
+    async validateAdmin(username: string, pass: string): Promise<AdminDataDto | null> {
         const adminData: BasicAdminDataDto = await this.adminService.getAdminByUserName(username)
         if (!adminData) { return null; }
         const isPasswordMatching = await bcrypt.compare(
             pass, adminData.passwordHash
         );
         if (adminData && isPasswordMatching) {
-            return plainToInstance(BasicAdminDataDto, adminData, {
+            return plainToInstance(AdminDataDto, adminData, {
                 excludeExtraneousValues: true,
             })
         }

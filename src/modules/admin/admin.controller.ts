@@ -22,7 +22,8 @@ export class AdminController {
     @UseGuards(LocalAuthGuard)
     @Post('/auth/login')
     async login(@Request() request: CustomAdminInRequest) {
-        const { admin } = request;
+        const admin = request.user;
+        console.log(admin);
         const { accessTokenCookie, token } = this.authService.createAuthCookie(admin);
         const { RefreshTokenCookie, refreshToken } = this.authService.createRefreshCookie(admin)
         request.res.setHeader('Set-Cookie', [accessTokenCookie, RefreshTokenCookie]);

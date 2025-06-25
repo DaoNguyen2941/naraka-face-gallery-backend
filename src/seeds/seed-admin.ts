@@ -1,6 +1,4 @@
 // src/seeds/seed-admin.ts
-import { DataSource } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import { AdminEntity } from '../modules/admin/entitys/admin.entity';
 import { config } from 'dotenv';
 config(); // Load biến môi trường từ .env
