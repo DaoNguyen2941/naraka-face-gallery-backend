@@ -1,21 +1,17 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { typeOrmConfig } from './config/typeorm.config';
+import { typeOrmConfig } from './database/typeorm.config';
 import { UseConfigModule } from './config/config.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './config/constants/jwt.constants';
 import { AdminModule } from './modules/admin/admin.module';
 import { PassportModule } from '@nestjs/passport';
-
+import { DatabaseModule } from './database/database.module';
 @Module({
   imports: [
     UseConfigModule,
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: typeOrmConfig,
-      inject: [ConfigService],
-    }),
+    DatabaseModule,
     PassportModule,
     JwtModule.register({
       global: true,

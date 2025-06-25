@@ -1,7 +1,7 @@
 
 import { Injectable, HttpException, HttpStatus,  } from '@nestjs/common';
 import { Repository } from "typeorm";
-import { AdminEntity } from './entities/admin.entity';
+import { AdminEntity } from './entitys/admin.entity';
 import { JwtService } from '@nestjs/jwt';
 import { BasicAdminDataDto } from './dtos/baseAdminData.dto';
 export type User = any;

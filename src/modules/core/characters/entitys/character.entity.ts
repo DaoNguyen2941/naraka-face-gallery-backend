@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { FaceEntity } from '../../faces/entities/face.entity';
+import { FaceEntity } from '../../faces/entitys/face.entity';
 import { BaseEntity } from '../../../../common/entities/base.entity';
 
 @Entity('characters')

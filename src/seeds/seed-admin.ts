@@ -1,27 +1,17 @@
 // src/seeds/seed-admin.ts
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { AdminEntity } from '../modules/admin/entities/admin.entity';
+import { AdminEntity } from '../modules/admin/entitys/admin.entity';
 import { config } from 'dotenv';
 config(); // Load biến môi trường từ .env
-
-// Khởi tạo DataSource thủ công (không dùng AppModule)
-const dataSource = new DataSource({
-  type: 'mysql',
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT!, 10),
-  username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-  entities: [AdminEntity],
-  synchronize: false,
-});
+import dataSource from 'src/data-source';
+import { hashData } from 'src/utils/hashData';
 
 async function seedAdmin() {
   await dataSource.initialize();
   const adminRepository = dataSource.getRepository(AdminEntity);
 
-  const email = 'admin@example.com';
+  const email = process.env.ADMIN_EMAIL;
   const existing = await adminRepository.findOne({ where: { email } });
 
   if (existing) {
@@ -29,13 +19,13 @@ async function seedAdmin() {
     process.exit(0);
   }
 
-  const password = 'admin123'; // Đổi theo nhu cầu
-  const hashed = await bcrypt.hash(password, 10);
+  const password = process.env.ADMIN_PASSWORD!; 
+  const hashed = await hashData(password);
 
   const admin = adminRepository.create({
     email,
     passwordHash: hashed,
-    username: 'superadmin',
+    username: process.env.ADMIN_NAME,
   });
 
   await adminRepository.save(admin);
