@@ -1,6 +1,7 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { FaceEntity } from '../../faces/entitys/face.entity';
 import { BaseEntity } from '../../../../common/entities/base.entity';
+import { FileEntity } from '../../object-storage/entitys/file.entity';
 
 @Entity('characters')
 export class CharacterEntity extends BaseEntity {
@@ -13,6 +14,7 @@ export class CharacterEntity extends BaseEntity {
     @OneToMany(() => FaceEntity, face => face.character)
     faces: FaceEntity[];
 
-    @Column({ type: "varchar", nullable: true, default: 'https://pub-5c96059ac5534e72b75bf2db6c189f0c.r2.dev/default-avatar.png' })
-    avatar: string;
+    @ManyToOne(() => FileEntity, { nullable: true, eager: true, cascade: ['insert'] })
+    @JoinColumn({ name: 'avatar_id' })
+    avatar?: FileEntity;
 }

@@ -48,7 +48,7 @@ export class CharactersService {
         const fileUpload = await this.storageService.uploadImage(file, key)
         const character = this.characterRepo.create({
             ...data,
-            avatar: fileUpload.url, // hoặc key nếu bạn muốn lưu path
+            avatar:{id: fileUpload.id}, // hoặc key nếu bạn muốn lưu path
         });
         const newCharacter = await this.characterRepo.save(character);
         return plainToInstance(DataCharacterDto, newCharacter, {
@@ -75,7 +75,7 @@ export class CharactersService {
             const slug = slugify(newName, { lower: true });
             const key = generateCharacterAvatarKey(slug, file.originalname);
             const avatar = await this.storageService.uploadImage(file, key);
-            character.avatar = avatar.url;
+            character.avatar = avatar;
         }
 
         Object.assign(character, data);
