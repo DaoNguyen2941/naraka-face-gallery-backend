@@ -3,10 +3,13 @@ import * as Joi from 'joi';
 import databaseConfig from './register/database.config';
 import jwtConfig from './register/jwt.config';
 import cfConfig from './register/cf.config';
+import redisConfig from './register/redis.config';
+
+
 export const UseConfigModule = ConfigModule.forRoot({
     isGlobal: true,
     cache: true,
-    load: [databaseConfig, jwtConfig,cfConfig],
+    load: [databaseConfig, jwtConfig, cfConfig, redisConfig],
     validationSchema: Joi.object({
         PORT: Joi.number().required().default(3002),
 
@@ -28,6 +31,10 @@ export const UseConfigModule = ConfigModule.forRoot({
         CLOUDFLARE_ACCOUNT_ID: Joi.string().required(),
         ENDPOINT: Joi.string().required(),
         R2_PUBLIC_URL: Joi.string().required(),
+
+        REDIS_HOST: Joi.string().required(),
+        REDIS_PORT: Joi.number().required().default(6379),
+        REDIS_DB: Joi.string(),
     })
 
 })

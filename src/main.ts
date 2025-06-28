@@ -18,6 +18,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   const PORT = configService.get('PORT') || 3001;
+  app.setGlobalPrefix('api');
 
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
@@ -26,7 +27,7 @@ async function bootstrap() {
   }));
 
   await app.listen(PORT, () => {
-       logger.log(`App listening on port ${PORT} ❤️`);
+    logger.log(`App listening on port ${PORT} ❤️`);
   });
 }
 bootstrap();

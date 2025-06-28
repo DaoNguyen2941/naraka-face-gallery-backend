@@ -6,7 +6,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { PassportModule } from '@nestjs/passport';
 import { DatabaseModule } from './database/database.module';
 import { JwtService } from '@nestjs/jwt';
-
+import { CustomRedisModule } from './modules/core/redis/redis.module';
 @Module({
   imports: [
     UseConfigModule,
@@ -18,6 +18,7 @@ import { JwtService } from '@nestjs/jwt';
       signOptions: { expiresIn: `${jwtConstants.expirationTimeDefault}s` },
     }),
     AdminModule,
+    CustomRedisModule,
   ],
   providers: [
     JwtService

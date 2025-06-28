@@ -10,7 +10,7 @@ import {
 } from 'src/utils/generate-face-key.util';
 import slugify from 'slugify';
 import { plainToInstance } from 'class-transformer';
-
+import { FileUsage } from '../object-storage/enums/file-usage.enum';
 @Injectable()
 export class CharactersService {
     constructor(
@@ -20,12 +20,8 @@ export class CharactersService {
 
     ) { }
 
-    async findAll(query?: { search?: string }): Promise<CharacterEntity[]> {
-        const where = query?.search
-            ? { name: ILike(`%${query.search}%`) }
-            : {};
+    async findAll(): Promise<CharacterEntity[]> {
         return this.characterRepo.find({
-            where,
             order: { createdAt: 'DESC' },
         });
     }
@@ -45,10 +41,10 @@ export class CharactersService {
         }
         const slug = slugify(data.name, { lower: true });
         const key = generateCharacterAvatarKey(slug, file.originalname);
-        const fileUpload = await this.storageService.uploadImage(file, key)
+        const fileUpload = await this.storageService.uploadImage(file, key, FileUsage.CHARACTER_AVATAR)
         const character = this.characterRepo.create({
             ...data,
-            avatar:{id: fileUpload.id}, // hoặc key nếu bạn muốn lưu path
+            avatar: fileUpload,
         });
         const newCharacter = await this.characterRepo.save(character);
         return plainToInstance(DataCharacterDto, newCharacter, {
@@ -87,8 +83,13 @@ export class CharactersService {
     }
 
 
-    async remove(id: string): Promise<void> {
+    async remove(id: string): Promise<any> {
         const character = await this.findOne(id);
         await this.characterRepo.remove(character);
+        await this.storageService.deleteFile(character.avatar!.key)
+
+        return {
+            messenger: "delete success"
+        }
     }
 }

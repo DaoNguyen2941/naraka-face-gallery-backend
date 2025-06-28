@@ -8,14 +8,15 @@ import { AdminCharactersController } from './characters/characters.controller';
 import { AdminCharactersModule } from './characters/admin-characters.module';
 import { CharactersModule } from '../core/characters/characters.module';
 import { StorageModule } from '../core/object-storage/object-storage.module';
-
+import { CustomRedisModule } from '../core/redis/redis.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([AdminEntity]),
     AdminAuthModule,
     AdminCharactersModule,
     CharactersModule,
-    StorageModule
+    StorageModule,
+    CustomRedisModule
   ],
   controllers: [
     AdminController,

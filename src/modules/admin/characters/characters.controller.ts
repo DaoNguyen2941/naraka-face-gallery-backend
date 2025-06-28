@@ -23,6 +23,11 @@ export class AdminCharactersController {
         private readonly charactersService: CharactersService,
     ) { }
 
+    @Get()
+    async getList() {
+        return await this.charactersService.findAll()
+    }
+
     @Post()
     @UseInterceptors(FileInterceptor('file'))
     async create(@Body() data: CreateCharacterDto, @UploadedFile(
@@ -54,4 +59,11 @@ export class AdminCharactersController {
         const { id } = params
         return this.charactersService.update(id, data, avatar);
     }
+
+    @Delete(':id')
+    delete(@Param() params: ParamsIdDto,) {
+           const { id } = params
+           return this.charactersService.remove(id)
+    }
+
 }

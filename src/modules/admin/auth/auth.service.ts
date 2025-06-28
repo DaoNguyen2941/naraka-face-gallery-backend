@@ -27,7 +27,7 @@ export class AuthService {
             expiresIn: `${jwtConstants.expirationTime}s`,
             secret: jwtConstants.refreshTokenSecret,
         });
-        const RefreshTokenCookie = createCookie('Refresh', refreshToken, '/auth/refresh', jwtConstants.expirationTime)
+        const RefreshTokenCookie = createCookie('Refresh', refreshToken, '/api/admin/auth/refresh', jwtConstants.expirationTime)
         return {
             RefreshTokenCookie,
             refreshToken

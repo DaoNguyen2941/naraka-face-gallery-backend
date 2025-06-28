@@ -17,9 +17,7 @@ export class JwtAdminStrategy extends PassportStrategy(Strategy,'admin-jwt') {
     });
   }
 
-  async validate(payload: JWTDecoded) {    
-    console.log(payload);
-    
+  async validate(payload: JWTDecoded) {        
     const user = { id: payload.sub, username: payload.username};
     return user;
   }

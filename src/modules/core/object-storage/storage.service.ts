@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { FileEntity } from './entitys/file.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-
+import { FileUsage } from './enums/file-usage.enum';
 @Injectable()
 export class StorageService {
 
@@ -16,7 +16,7 @@ export class StorageService {
     private readonly configService: ConfigService,
   ) { }
 
-  async uploadImage(file: Express.Multer.File, key?: string,) {
+  async uploadImage(file: Express.Multer.File, key?: string,usage?: FileUsage) {
     try {
       const bucketName = this.configService.get('cfR2.bucketName');
       const publicUrl = this.configService.get('cfR2.publicUrl');
@@ -41,7 +41,7 @@ export class StorageService {
         type: file.mimetype,
         size: file.size,
         originalName: file.originalname,
-        // author: { id: userId },
+        usage: usage
       });
 
       const savedFile = await this.filesRepository.save(dataFile);
