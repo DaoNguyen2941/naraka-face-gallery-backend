@@ -1,4 +1,4 @@
-import { CreateCharacterDto } from './createCharacter.dto';
+import { CreateCharacterDto } from './create.dto';
 import { IsString, } from 'class-validator';
 import { Expose, Type } from 'class-transformer';
 import { DataFileDto } from '../../object-storage/dtos/dataFile.dto';
@@ -8,6 +8,10 @@ export class DataCharacterDto extends CreateCharacterDto {
     id: string;
 
     @Expose()
-    @Type(() => DataFileDto) 
+    @Type(() => DataFileDto)
     avatar: DataFileDto;
+
+    @Expose()
+    @IsString()
+    slug: string
 }

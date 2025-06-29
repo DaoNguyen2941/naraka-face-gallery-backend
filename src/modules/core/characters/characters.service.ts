@@ -5,7 +5,6 @@ import { CharacterEntity } from './entitys/character.entity';
 import { CreateCharacterDto, UpdateCharacterDto, DataCharacterDto } from './dtos';
 import { StorageService } from '../object-storage/storage.service';
 import {
-    generateFaceStorageKey,
     generateCharacterAvatarKey,
 } from 'src/utils/generate-face-key.util';
 import slugify from 'slugify';
@@ -17,11 +16,14 @@ export class CharactersService {
         @InjectRepository(CharacterEntity)
         private readonly characterRepo: Repository<CharacterEntity>,
         private readonly storageService: StorageService
-
     ) { }
 
-    async findAll(): Promise<CharacterEntity[]> {
+    async findAll(query?: { search?: string }): Promise<CharacterEntity[]> {
+        const where = query?.search
+            ? { name: ILike(`%${query.search}%`) }
+            : {};
         return this.characterRepo.find({
+            where,
             order: { createdAt: 'DESC' },
         });
     }
@@ -39,12 +41,15 @@ export class CharactersService {
         if (existing) {
             throw new ConflictException(`Nhân vật ${data.name} đã tồn tại`);
         }
-        const slug = slugify(data.name, { lower: true });
+        const slug = await slugify(data.name, { lower: true });
         const key = generateCharacterAvatarKey(slug, file.originalname);
         const fileUpload = await this.storageService.uploadImage(file, key, FileUsage.CHARACTER_AVATAR)
+        console.log(fileUpload);
+
         const character = this.characterRepo.create({
             ...data,
             avatar: fileUpload,
+            slug: slug
         });
         const newCharacter = await this.characterRepo.save(character);
         return plainToInstance(DataCharacterDto, newCharacter, {
@@ -73,10 +78,10 @@ export class CharactersService {
             const avatar = await this.storageService.uploadImage(file, key);
             character.avatar = avatar;
         }
-
+        character.slug = slugify(newName, { lower: true });
         Object.assign(character, data);
-
         const updated = await this.characterRepo.save(character);
+        console.log(updated);
         return plainToInstance(DataCharacterDto, updated, {
             excludeExtraneousValues: true,
         });
@@ -86,7 +91,9 @@ export class CharactersService {
     async remove(id: string): Promise<any> {
         const character = await this.findOne(id);
         await this.characterRepo.remove(character);
-        await this.storageService.deleteFile(character.avatar!.key)
+        if (character.avatar) {
+            await this.storageService.deleteFile(character.avatar.key)
+        }
 
         return {
             messenger: "delete success"

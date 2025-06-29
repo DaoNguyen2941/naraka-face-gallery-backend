@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CharactersModule } from 'src/modules/core/characters/characters.module';
-import { AdminCharactersController } from './characters.controller';
+import { AdminCharactersController } from './character.controller';
 
 @Module({
   imports: [CharactersModule],

@@ -12,25 +12,23 @@ import {
     ParseFilePipeBuilder,
     HttpStatus
 } from '@nestjs/common';
-import { CharactersService } from 'src/modules/core/characters/characters.service';
-import { CreateCharacterDto, DataCharacterDto, UpdateCharacterDto } from '../../core/characters/dtos';
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ParamsIdDto } from 'src/common/dtos/ParamsId.dto';
+import { FaceService } from 'src/modules/core/faces/face.service';
 
-@Controller('admin/characters')
-export class AdminCharactersController {
+@Controller('admin/tag')
+export class AdminTagController {
     constructor(
-        private readonly charactersService: CharactersService,
     ) { }
 
     @Get()
-    async getList() {
-        return await this.charactersService.findAll()
+    async getList(): Promise<any> {
+
     }
 
     @Post()
     @UseInterceptors(FileInterceptor('file'))
-    async create(@Body() data: CreateCharacterDto, @UploadedFile(
+    async create(@Body() data: any, @UploadedFile(
         new ParseFilePipeBuilder()
             .addFileTypeValidator({
                 fileType: 'image'
@@ -40,14 +38,14 @@ export class AdminCharactersController {
                 errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
             }),
     ) file: Express.Multer.File,) {
-        return await this.charactersService.create(data, file);
+      
     }
 
     @Patch(':id')
     @UseInterceptors(FileInterceptor('avatar'))
     update(
         @Param() params: ParamsIdDto,
-        @Body() data: UpdateCharacterDto,
+        @Body() data: any,
         @UploadedFile(
             new ParseFilePipeBuilder()
                 .addFileTypeValidator({ fileType: 'image' })
@@ -55,15 +53,13 @@ export class AdminCharactersController {
                 .build({ errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY }),
         )
         avatar?: Express.Multer.File,
-    ): Promise<DataCharacterDto> {
-        const { id } = params
-        return this.charactersService.update(id, data, avatar);
+    ) {
+     
     }
 
     @Delete(':id')
     delete(@Param() params: ParamsIdDto,) {
-           const { id } = params
-           return this.charactersService.remove(id)
+        
     }
 
 }

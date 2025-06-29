@@ -1,9 +1,9 @@
-import { Entity, Column, ManyToMany, ManyToOne, JoinTable } from 'typeorm';
+import { Entity, Column, ManyToMany, ManyToOne, JoinTable, OneToOne, JoinColumn } from 'typeorm';
 import { CategoryEntity } from '../../categories/entitys/category.entity';
 import { CharacterEntity } from '../../characters/entitys/character.entity';
 import { BaseEntity } from '../../../../common/entities/base.entity';
 import { FileEntity } from 'src/modules/core/object-storage/entitys/file.entity';
-import { TagEntity } from '../../tag/entitys/tag.entity';
+import { TagEntity } from '../../tags/entitys/tag.entity';
 
 @Entity('faces')
 export class FaceEntity extends BaseEntity {
@@ -14,6 +14,7 @@ export class FaceEntity extends BaseEntity {
   description?: string;
 
   @ManyToOne(() => CharacterEntity, character => character.faces, { eager: true })
+  @JoinColumn({ name: 'character_id' })
   character: CharacterEntity;
 
   @ManyToMany(() => CategoryEntity, category => category.faces, { eager: true })
@@ -24,7 +25,8 @@ export class FaceEntity extends BaseEntity {
   @JoinTable()
   tags: TagEntity[];
 
-  @ManyToOne(() => FileEntity, { eager: true })
+  @OneToOne(() => FileEntity, { eager: true, cascade: ['insert'], nullable: true })
+  @JoinColumn({ name: 'image_id' }) 
   image: FileEntity;
 
 }

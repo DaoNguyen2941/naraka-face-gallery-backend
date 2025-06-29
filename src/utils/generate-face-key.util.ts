@@ -8,7 +8,7 @@ import * as path from 'path';
 export function generateFaceStorageKey(
   originalname: string,
   characterSlug: string,
-  categorySlug: string,
+  categorySlug = 'undetermined',
 ): string {
   const ext = path.extname(originalname); // .jpg, .png, ...
   const filename = `${uuidv4()}${ext}`;
@@ -25,4 +25,12 @@ export function generateCharacterAvatarKey(
 ): string {
   const ext = path.extname(originalname);
   return `img/characters/${characterSlug}/avatar${ext}`;
+}
+
+export function generateCategoryKet(
+  categoryName: string,
+  originalname: string,
+): string {
+  const ext = path.extname(originalname);
+  return `img/category/${categoryName}/cover-photo${ext}`;
 }

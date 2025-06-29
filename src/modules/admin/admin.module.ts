@@ -4,11 +4,14 @@ import { AdminController } from './admin.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminEntity } from './entitys/admin.entity';
 import { AdminAuthModule } from './auth/adminAuth.module';
-import { AdminCharactersController } from './characters/characters.controller';
-import { AdminCharactersModule } from './characters/admin-characters.module';
+import { AdminCharactersController } from './characters/character.controller';
+import { AdminCharactersModule } from './characters/character.module';
 import { CharactersModule } from '../core/characters/characters.module';
 import { StorageModule } from '../core/object-storage/object-storage.module';
 import { CustomRedisModule } from '../core/redis/redis.module';
+import { AdminCategoryModule } from './categorys/category.module';
+import { AdminFaceModule } from './faces/face.module';
+import { AdminTagModule } from './tags/tag.modulle';
 @Module({
   imports: [
     TypeOrmModule.forFeature([AdminEntity]),
@@ -16,7 +19,10 @@ import { CustomRedisModule } from '../core/redis/redis.module';
     AdminCharactersModule,
     CharactersModule,
     StorageModule,
-    CustomRedisModule
+    CustomRedisModule,
+    AdminCategoryModule,
+    AdminFaceModule,
+    AdminTagModule
   ],
   controllers: [
     AdminController,

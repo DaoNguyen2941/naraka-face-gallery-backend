@@ -1,7 +1,7 @@
 // src/seeds/seed-admin.ts
 import { AdminEntity } from '../modules/admin/entitys/admin.entity';
 import { config } from 'dotenv';
-config(); // Load biến môi trường từ .env
+config(); 
 import dataSource from 'src/data-source';
 import { hashData } from 'src/utils/hashData';
 
@@ -24,6 +24,7 @@ async function seedAdmin() {
     email,
     passwordHash: hashed,
     username: process.env.ADMIN_NAME,
+      slug: 'admin'
   });
 
   await adminRepository.save(admin);

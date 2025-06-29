@@ -25,4 +25,7 @@ export abstract class BaseEntity extends TypeOrmBaseEntity {
 
   @Column({ nullable: true })
   updatedBy?: string;
+
+  @Column({ unique: true })
+  slug: string;
 }

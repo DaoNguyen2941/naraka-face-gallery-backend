@@ -6,6 +6,8 @@ import { FileEntity } from './entitys/file.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { FileUsage } from './enums/file-usage.enum';
+import { randomUUID } from 'crypto';
+
 @Injectable()
 export class StorageService {
 
@@ -16,7 +18,7 @@ export class StorageService {
     private readonly configService: ConfigService,
   ) { }
 
-  async uploadImage(file: Express.Multer.File, key?: string,usage?: FileUsage) {
+  async uploadImage(file: Express.Multer.File, key?: string, usage?: FileUsage) {
     try {
       const bucketName = this.configService.get('cfR2.bucketName');
       const publicUrl = this.configService.get('cfR2.publicUrl');
@@ -34,14 +36,17 @@ export class StorageService {
       );
 
       const url = `${publicUrl}/${finalKey}`;
+      const uuid = randomUUID();
 
       const dataFile = this.filesRepository.create({
+        id: uuid,
         key: finalKey,
         url: url,
         type: file.mimetype,
         size: file.size,
         originalName: file.originalname,
-        usage: usage
+        usage: usage,
+        slug: uuid
       });
 
       const savedFile = await this.filesRepository.save(dataFile);
@@ -56,7 +61,6 @@ export class StorageService {
   async deleteFile(key: string): Promise<void> {
     try {
       const bucketName = this.configService.get('cfR2.bucketName');
-
       // 1. Xóa trên R2
       await this.s3.send(
         new DeleteObjectCommand({
