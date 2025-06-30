@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, In  } from 'typeorm';
 import { TagEntity } from './entitys/tag.entity';
 import { CreateTagDto, UpdateTagDto, DataTagDto } from './dtos';
 import slugify from 'slugify';
@@ -12,6 +12,14 @@ export class TagService {
         @InjectRepository(TagEntity)
         private readonly tagRepo: Repository<TagEntity>,
     ) { }
+
+    async findByIds(ids: string[]): Promise<TagEntity[]> {
+        return await this.tagRepo.find({
+            where: {
+                id: In(ids)
+            }
+        })
+    }
 
     async findAll(query?: { search?: string }): Promise<TagEntity[]> {
         const where = query?.search
@@ -57,7 +65,6 @@ export class TagService {
             if (existing && existing.id !== id) {
                 throw new ConflictException(`Tên nhãn: "${data.name}" đã tồn tại`);
             }
-            tag.name = data.name;
             tag.slug = slugify(data.name, { lower: true });
         }
 

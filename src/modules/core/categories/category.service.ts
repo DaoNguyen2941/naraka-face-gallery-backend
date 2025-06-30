@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectRepository, } from '@nestjs/typeorm';
 import { CategoryEntity } from './entitys/category.entity';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, In } from 'typeorm';
 import { StorageService } from '../object-storage/storage.service';
 import { CreateCategoryDto, UpdateCategoryDto, DataCategoryDto } from './dtos';
 import slugify from 'slugify';
@@ -10,12 +10,20 @@ import { FileUsage } from '../object-storage/enums/file-usage.enum';
 import { plainToInstance } from 'class-transformer';
 
 @Injectable()
-export class CategoriesService {
+export class CategoryService {
     constructor(
         @InjectRepository(CategoryEntity)
         private readonly CategoryRepo: Repository<CategoryEntity>,
         private readonly storageService: StorageService
     ) { }
+
+    async findByIds(ids: string[]): Promise<CategoryEntity[]> {
+        return await this.CategoryRepo.find({
+            where: {
+                id: In(ids)
+            }
+        })
+    }
 
     async findAll(query?: { search?: string }): Promise<CategoryEntity[]> {
         const where = query?.search
@@ -75,7 +83,7 @@ export class CategoriesService {
         Object.assign(category, data);
         const updated = await this.CategoryRepo.save(category);
         console.log(updated);
-        
+
         return plainToInstance(DataCategoryDto, updated, {
             excludeExtraneousValues: true,
         });

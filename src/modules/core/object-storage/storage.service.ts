@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { FileUsage } from './enums/file-usage.enum';
 import { randomUUID } from 'crypto';
+import slugify from 'slugify';
 
 @Injectable()
 export class StorageService {
@@ -22,9 +23,10 @@ export class StorageService {
     try {
       const bucketName = this.configService.get('cfR2.bucketName');
       const publicUrl = this.configService.get('cfR2.publicUrl');
+      const cleanName = slugify(file.originalname)
       const finalKey =
         key ||
-        `images/${new Date().toISOString().split('T')[0]}/${uuidv4()}-${file.originalname}`;
+        `images/${new Date().toISOString().split('T')[0]}/${uuidv4()}-${cleanName}`;
 
       const upload = await this.s3.send(
         new PutObjectCommand({
@@ -32,6 +34,7 @@ export class StorageService {
           Key: finalKey,
           Body: file.buffer,
           ContentType: file.mimetype,
+          ContentDisposition: `inline; filename="${cleanName}"`,
         }),
       );
 
@@ -44,7 +47,7 @@ export class StorageService {
         url: url,
         type: file.mimetype,
         size: file.size,
-        originalName: file.originalname,
+        originalName: cleanName,
         usage: usage,
         slug: uuid
       });
@@ -60,6 +63,8 @@ export class StorageService {
 
   async deleteFile(key: string): Promise<void> {
     try {
+      console.log(key);
+      
       const bucketName = this.configService.get('cfR2.bucketName');
       // 1. Xóa trên R2
       await this.s3.send(

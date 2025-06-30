@@ -2,64 +2,41 @@ import {
     Controller,
     Get,
     Post,
-    Put,
     Patch,
     Delete,
     Param,
     Body,
-    UseInterceptors,
-    UploadedFile,
-    ParseFilePipeBuilder,
-    HttpStatus
 } from '@nestjs/common';
-import { FileInterceptor } from "@nestjs/platform-express";
 import { ParamsIdDto } from 'src/common/dtos/ParamsId.dto';
-import { FaceService } from 'src/modules/core/faces/face.service';
+import { TagService } from 'src/modules/core/tags/tag.service';
+import { CreateTagDto, UpdateTagDto, DataTagDto } from 'src/modules/core/tags/dtos';
 
 @Controller('admin/tag')
 export class AdminTagController {
     constructor(
+        private readonly tagService: TagService,
     ) { }
 
     @Get()
     async getList(): Promise<any> {
-
+        return await this.tagService.findAll()
     }
 
     @Post()
-    @UseInterceptors(FileInterceptor('file'))
-    async create(@Body() data: any, @UploadedFile(
-        new ParseFilePipeBuilder()
-            .addFileTypeValidator({
-                fileType: 'image'
-            })
-            .addMaxSizeValidator({ maxSize: 2_000_000 })
-            .build({
-                errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
-            }),
-    ) file: Express.Multer.File,) {
-      
+    async create(@Body() data: CreateTagDto): Promise<DataTagDto> {
+        return await this.tagService.create(data)
     }
 
     @Patch(':id')
-    @UseInterceptors(FileInterceptor('avatar'))
-    update(
-        @Param() params: ParamsIdDto,
-        @Body() data: any,
-        @UploadedFile(
-            new ParseFilePipeBuilder()
-                .addFileTypeValidator({ fileType: 'image' })
-                .addMaxSizeValidator({ maxSize: 2_000_000 })
-                .build({ errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY }),
-        )
-        avatar?: Express.Multer.File,
-    ) {
-     
+    async update(@Param() params: ParamsIdDto, @Body() data: UpdateTagDto,): Promise<DataTagDto> {
+        const { id } = params
+        return await this.tagService.update(id, data)
     }
 
     @Delete(':id')
-    delete(@Param() params: ParamsIdDto,) {
-        
+    async delete(@Param() params: ParamsIdDto) {
+        const { id } = params
+        return await this.tagService.remove(id)
     }
 
 }

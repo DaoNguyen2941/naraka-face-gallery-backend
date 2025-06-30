@@ -41,11 +41,9 @@ export class CharactersService {
         if (existing) {
             throw new ConflictException(`Nhân vật ${data.name} đã tồn tại`);
         }
-        const slug = await slugify(data.name, { lower: true });
+        const slug = slugify(data.name, { lower: true });
         const key = generateCharacterAvatarKey(slug, file.originalname);
         const fileUpload = await this.storageService.uploadImage(file, key, FileUsage.CHARACTER_AVATAR)
-        console.log(fileUpload);
-
         const character = this.characterRepo.create({
             ...data,
             avatar: fileUpload,
@@ -75,7 +73,7 @@ export class CharactersService {
         if (file) {
             const slug = slugify(newName, { lower: true });
             const key = generateCharacterAvatarKey(slug, file.originalname);
-            const avatar = await this.storageService.uploadImage(file, key);
+            const avatar = await this.storageService.uploadImage(file, key, FileUsage.COVER_PHOTO_CATEGORY);
             character.avatar = avatar;
         }
         character.slug = slugify(newName, { lower: true });

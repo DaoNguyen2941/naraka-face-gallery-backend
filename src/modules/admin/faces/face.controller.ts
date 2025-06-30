@@ -15,7 +15,7 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ParamsIdDto } from 'src/common/dtos/ParamsId.dto';
 import { FaceService } from 'src/modules/core/faces/face.service';
-
+import { CreateFaceDto, DataFaceDto, UpdateFaceDto } from 'src/modules/core/faces/dtos';
 @Controller('admin/face')
 export class AdminFaceController {
     constructor(
@@ -24,12 +24,12 @@ export class AdminFaceController {
 
     @Get()
     async getList(): Promise<any> {
-
+        return await this.faceService.findAll()
     }
 
     @Post()
-    @UseInterceptors(FileInterceptor('file'))
-    async create(@Body() data: any, @UploadedFile(
+    @UseInterceptors(FileInterceptor('qrCode'))
+    async create(@Body() data: CreateFaceDto, @UploadedFile(
         new ParseFilePipeBuilder()
             .addFileTypeValidator({
                 fileType: 'image'
@@ -38,29 +38,21 @@ export class AdminFaceController {
             .build({
                 errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
             }),
-    ) file: Express.Multer.File,) {
-      
+    ) qrCode: Express.Multer.File,): Promise<DataFaceDto> {
+        return this.faceService.create(data, qrCode)
     }
 
     @Patch(':id')
-    @UseInterceptors(FileInterceptor('avatar'))
-    update(
-        @Param() params: ParamsIdDto,
-        @Body() data: any,
-        @UploadedFile(
-            new ParseFilePipeBuilder()
-                .addFileTypeValidator({ fileType: 'image' })
-                .addMaxSizeValidator({ maxSize: 2_000_000 })
-                .build({ errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY }),
-        )
-        avatar?: Express.Multer.File,
+    update(@Param() params: ParamsIdDto, @Body() data: UpdateFaceDto,
     ) {
-     
+        const { id } = params
+        return this.faceService.update(id, data)
     }
 
     @Delete(':id')
-    delete(@Param() params: ParamsIdDto,) {
-        
+    async delete(@Param() params: ParamsIdDto,): Promise<DataFaceDto> {
+        const { id } = params
+        return await this.faceService.remove(id)
     }
 
 }

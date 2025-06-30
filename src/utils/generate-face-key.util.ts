@@ -8,11 +8,10 @@ import * as path from 'path';
 export function generateFaceStorageKey(
   originalname: string,
   characterSlug: string,
-  categorySlug = 'undetermined',
 ): string {
   const ext = path.extname(originalname); // .jpg, .png, ...
   const filename = `${uuidv4()}${ext}`;
-  return `img/characters/${characterSlug}/categories/${categorySlug}/${filename}`;
+  return `img/characters/${characterSlug}/qr-code/${filename}`;
 }
 
 /**
@@ -32,5 +31,4 @@ export function generateCategoryKet(
   originalname: string,
 ): string {
   const ext = path.extname(originalname);
-  return `img/category/${categoryName}/cover-photo${ext}`;
-}
+  return `img/category/${categoryName}/cover-photo${ext}`;}

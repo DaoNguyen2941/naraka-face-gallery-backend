@@ -4,8 +4,9 @@ import { IsNotEmpty, IsOptional, IsString, IsUUID, IsArray } from 'class-validat
 export class CreateFaceDto {
     @Expose()
     @IsString()
-    @IsNotEmpty()
-    title: string;
+    // @IsNotEmpty()
+    @IsOptional()
+    title?: string;
 
     @Expose()
     @IsOptional()

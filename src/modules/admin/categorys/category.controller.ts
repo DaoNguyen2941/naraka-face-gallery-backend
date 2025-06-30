@@ -14,13 +14,13 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ParamsIdDto } from 'src/common/dtos/ParamsId.dto';
-import { CategoriesService } from 'src/modules/core/categories/category.service';
+import { CategoryService } from 'src/modules/core/categories/category.service';
 import { CreateCategoryDto, UpdateCategoryDto, DataCategoryDto } from 'src/modules/core/categories/dtos';
 
 @Controller('admin/category')
 export class AdminCategoryController {
     constructor(
-        private readonly categoriesService: CategoriesService,
+        private readonly categoriesService: CategoryService,
     ) { }
 
     @Get()
