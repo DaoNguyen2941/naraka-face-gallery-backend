@@ -13,7 +13,7 @@ export class LocalStrategy extends PassportStrategy(Strategy, "admin-local") {
   async validate(username: string, password: string,): Promise<AdminDataDto> {
     const admin: AdminDataDto | null = await this.authService.validateAdmin(username, password);
     if (!admin) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Thông tin tài khoản hoạc mật khẩu không đúng!');
     }
     return admin;
   }

@@ -6,6 +6,7 @@ import {
     Delete,
     Param,
     Body,
+    Put,
 } from '@nestjs/common';
 import { ParamsIdDto } from 'src/common/dtos/ParamsId.dto';
 import { TagService } from 'src/modules/core/tags/tag.service';
@@ -18,7 +19,7 @@ export class AdminTagController {
     ) { }
 
     @Get()
-    async getList(): Promise<any> {
+    async getList(): Promise<DataTagDto[]> {
         return await this.tagService.findAll()
     }
 
@@ -27,7 +28,7 @@ export class AdminTagController {
         return await this.tagService.create(data)
     }
 
-    @Patch(':id')
+    @Put(':id')
     async update(@Param() params: ParamsIdDto, @Body() data: UpdateTagDto,): Promise<DataTagDto> {
         const { id } = params
         return await this.tagService.update(id, data)

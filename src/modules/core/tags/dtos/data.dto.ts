@@ -11,4 +11,13 @@ export class DataTagDto extends CreateTagDto {
     @IsString()
     slug: string
 
+    
+    @Expose()
+    @IsString()
+    createdAt: string
+
+    
+    @Expose()
+    @IsString()
+    updatedAt: string
 }

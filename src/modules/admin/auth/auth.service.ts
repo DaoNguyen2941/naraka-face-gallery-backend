@@ -34,7 +34,7 @@ export class AuthService {
         }
     }
 
-    public createAuthCookie(adminData: AdminDataDto) {        
+    public createAuthCookie(adminData: AdminDataDto) {
         const payload: JWTPayload = {
             sub: adminData.id,
             username: adminData.username,

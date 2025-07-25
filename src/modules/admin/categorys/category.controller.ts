@@ -45,7 +45,7 @@ export class AdminCategoryController {
         return await this.categoriesService.create(data, cover_photo);
     }
 
-    @Patch(':id')
+    @Put(':id')
     @UseInterceptors(FileInterceptor('cover_photo'))
     update(
         @Param() params: ParamsIdDto,

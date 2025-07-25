@@ -14,4 +14,12 @@ export class DataCharacterDto extends CreateCharacterDto {
     @Expose()
     @IsString()
     slug: string
+
+    @Expose()
+    @IsString()
+    createdAt: Date
+
+    @Expose()
+    @IsString()
+    updatedAt: Date
 }

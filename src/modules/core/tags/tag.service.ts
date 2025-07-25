@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, In  } from 'typeorm';
+import { Repository, ILike, In } from 'typeorm';
 import { TagEntity } from './entitys/tag.entity';
 import { CreateTagDto, UpdateTagDto, DataTagDto } from './dtos';
 import slugify from 'slugify';
@@ -21,14 +21,18 @@ export class TagService {
         })
     }
 
-    async findAll(query?: { search?: string }): Promise<TagEntity[]> {
+    async findAll(query?: { search?: string }): Promise<DataTagDto[]> {
         const where = query?.search
             ? { name: ILike(`%${query.search}%`) }
             : {};
-        return this.tagRepo.find({
+        const data = await this.tagRepo.find({
             where,
             order: { createdAt: 'DESC' },
         });
+
+        return plainToInstance(DataTagDto, data, {
+            excludeExtraneousValues: true,
+        })
     }
 
     async findOne(id: string): Promise<TagEntity> {
@@ -79,7 +83,7 @@ export class TagService {
     async remove(id: string): Promise<any> {
         const character = await this.findOne(id);
         await this.tagRepo.remove(character);
-        
+
         return {
             messenger: "delete success"
         }

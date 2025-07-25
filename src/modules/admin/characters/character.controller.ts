@@ -16,7 +16,6 @@ import { CharactersService } from 'src/modules/core/characters/characters.servic
 import { CreateCharacterDto, DataCharacterDto, UpdateCharacterDto } from '../../core/characters/dtos';
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ParamsIdDto } from 'src/common/dtos/ParamsId.dto';
-import { CharacterEntity } from 'src/modules/core/characters/entitys/character.entity';
 
 
 @Controller('admin/characters')
@@ -26,7 +25,7 @@ export class AdminCharactersController {
     ) { }
 
     @Get()
-    async getList(): Promise<CharacterEntity[]> {
+    async getList(): Promise<DataCharacterDto[]> {
         return await this.charactersService.findAll()
     }
 
@@ -41,11 +40,11 @@ export class AdminCharactersController {
             .build({
                 errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
             }),
-    ) file: Express.Multer.File,) {
+    ) file: Express.Multer.File,): Promise<DataCharacterDto> {
         return await this.charactersService.create(data, file);
     }
 
-    @Patch(':id')
+    @Put(':id')
     @UseInterceptors(FileInterceptor('avatar'))
     update(
         @Param() params: ParamsIdDto,

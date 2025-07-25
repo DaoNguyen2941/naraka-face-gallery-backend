@@ -8,7 +8,7 @@ import {
     generateCharacterAvatarKey,
 } from 'src/utils/generate-face-key.util';
 import slugify from 'slugify';
-import { plainToInstance } from 'class-transformer';
+import { plainToInstance, instanceToPlain } from 'class-transformer';
 import { FileUsage } from '../object-storage/enums/file-usage.enum';
 @Injectable()
 export class CharactersService {
@@ -18,14 +18,20 @@ export class CharactersService {
         private readonly storageService: StorageService
     ) { }
 
-    async findAll(query?: { search?: string }): Promise<CharacterEntity[]> {
+    async findAll(query?: { search?: string }): Promise<DataCharacterDto[]> {
         const where = query?.search
             ? { name: ILike(`%${query.search}%`) }
             : {};
-        return this.characterRepo.find({
+        const list = await this.characterRepo.find({
             where,
             order: { createdAt: 'DESC' },
         });
+
+        const plainList = instanceToPlain(list) as object[];
+
+        return plainToInstance(DataCharacterDto, plainList, {
+            excludeExtraneousValues: true,
+        })
     }
 
     async findOne(id: string): Promise<CharacterEntity> {
@@ -79,7 +85,6 @@ export class CharactersService {
         character.slug = slugify(newName, { lower: true });
         Object.assign(character, data);
         const updated = await this.characterRepo.save(character);
-        console.log(updated);
         return plainToInstance(DataCharacterDto, updated, {
             excludeExtraneousValues: true,
         });
