@@ -6,14 +6,15 @@ import { FaceService } from './face.service';
 import { CharactersModule } from '../characters/characters.module';
 import { TagModule } from '../tags/tag.module';
 import { CategoriesModule } from '../categories/categorys.module';
-
+import { QueueModule } from '../queue/queue.module';
 @Module({
     imports: [
         TypeOrmModule.forFeature([FaceEntity]),
         StorageModule,
         CharactersModule,
         TagModule,
-        CategoriesModule
+        CategoriesModule,
+        QueueModule
     ],
     providers: [FaceService],
     exports: [FaceService],

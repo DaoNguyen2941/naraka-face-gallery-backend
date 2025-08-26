@@ -8,21 +8,51 @@ import { ConfigService } from '@nestjs/config';
 import { FileUsage } from './enums/file-usage.enum';
 import { randomUUID } from 'crypto';
 import slugify from 'slugify';
+import { createImageReviewLock } from 'src/utils/generate-face-key.util';
 
 @Injectable()
 export class StorageService {
+  private readonly bucketName: string;
+  private readonly publicUrl: string;
 
   constructor(
     @InjectRepository(FileEntity)
-    private filesRepository: Repository<FileEntity>,
-    @Inject('R2_S3_CLIENT') private readonly s3: S3Client,
+    private readonly filesRepository: Repository<FileEntity>,
+    @Inject('R2_S3_CLIENT')
+    private readonly s3: S3Client,
+
     private readonly configService: ConfigService,
-  ) { }
+  ) {
+    this.bucketName = this.configService.get<string>('cfR2.bucketName')!;
+    this.publicUrl = this.configService.get<string>('cfR2.publicUrl')!;
+  }
+
+  async uploadImageReviews(files: Express.Multer.File[], characterSlug: string, qrSlug: string,): Promise<FileEntity[]> {
+    if (!files || files.length === 0) return [];
+    const uploadTasks = files.map(async (file) => {
+      const generatedKey = createImageReviewLock(file.originalname, characterSlug, qrSlug)
+      return this.uploadImage(file, generatedKey, FileUsage.IMAGE_REVIEW);
+    });
+    const results = await Promise.allSettled(uploadTasks);
+    const uploadedFiles: FileEntity[] = [];
+    results.forEach((result, index) => {
+      const originalName = files[index]?.originalname;
+      if (result.status === 'fulfilled') {
+        uploadedFiles.push(result.value);
+      } else {
+        console.warn(`❌ Failed to upload "${originalName}": ${result.reason?.message || result.reason}`);
+      }
+    });
+
+    return uploadedFiles;
+  }
+
+
 
   async uploadImage(file: Express.Multer.File, key?: string, usage?: FileUsage) {
     try {
-      const bucketName = this.configService.get('cfR2.bucketName');
-      const publicUrl = this.configService.get('cfR2.publicUrl');
+      const bucketName = this.bucketName
+      const publicUrl = this.publicUrl
       const cleanName = slugify(file.originalname)
       const finalKey =
         key ||
@@ -64,7 +94,7 @@ export class StorageService {
   async deleteFile(key: string): Promise<void> {
     try {
       console.log(key);
-      
+
       const bucketName = this.configService.get('cfR2.bucketName');
       // 1. Xóa trên R2
       await this.s3.send(

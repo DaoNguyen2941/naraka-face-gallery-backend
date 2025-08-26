@@ -1,9 +1,18 @@
-import { Entity, Column, ManyToMany, ManyToOne, JoinTable, OneToOne, JoinColumn } from 'typeorm';
-import { CategoryEntity } from '../../categories/entitys/category.entity';
-import { CharacterEntity } from '../../characters/entitys/character.entity';
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  ManyToMany,
+  OneToOne,
+  OneToMany,
+  JoinColumn,
+  JoinTable,
+} from 'typeorm';
 import { BaseEntity } from '../../../../common/entities/base.entity';
-import { FileEntity } from 'src/modules/core/object-storage/entitys/file.entity';
+import { CharacterEntity } from '../../characters/entitys/character.entity';
+import { CategoryEntity } from '../../categories/entitys/category.entity';
 import { TagEntity } from '../../tags/entitys/tag.entity';
+import { FileEntity } from 'src/modules/core/object-storage/entitys/file.entity';
 
 @Entity('faces')
 export class FaceEntity extends BaseEntity {
@@ -25,8 +34,34 @@ export class FaceEntity extends BaseEntity {
   @JoinTable()
   tags: TagEntity[];
 
-  @OneToOne(() => FileEntity, { eager: true, cascade: ['insert'], nullable: true })
-  @JoinColumn({ name: 'image_id' }) 
-  image: FileEntity;
+  // Danh sách ảnh review liên quan
+  @OneToMany(() => FileEntity, file => file.faceImageReview, {
+    eager: true,
+    cascade: true,                    // Cho phép chèn và xoá file từ FaceEntity
+    orphanedRowAction: 'delete',     // Xoá file khi không còn liên kết
+  })
+  imageReviews: FileEntity[];
 
+  // QR code tiếng Trung
+  @OneToOne(() => FileEntity, {
+    eager: true,
+    cascade: true,
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'qrCodeCN_id' })
+  qrCodeCN: FileEntity;
+
+  // QR code Global
+  @OneToOne(() => FileEntity, {
+    eager: true,
+    cascade: true,
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'qrCodeGlobals_id' })
+  qrCodeGlobals: FileEntity;
+
+  @Column({ type: 'varchar', nullable: true })
+  source: string;
 }

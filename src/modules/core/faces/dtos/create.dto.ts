@@ -1,5 +1,13 @@
 import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString, IsUUID, IsArray } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUUID, IsArray, } from 'class-validator';
+import { Transform } from 'class-transformer';
+
+export class GroupFile {
+  fileImageReviews: Express.Multer.File[];
+  fileQrCodeGlobals?: Express.Multer.File;
+  fileQrCodeCN?: Express.Multer.File;
+}
+
 
 export class CreateFaceDto {
     @Expose()
@@ -13,6 +21,11 @@ export class CreateFaceDto {
     @IsString()
     description?: string;
 
+    @Expose()
+    @IsOptional()
+    @IsString()
+    source?: string;
+
     @IsUUID()
     @IsNotEmpty()
     characterId: string;
@@ -25,6 +38,16 @@ export class CreateFaceDto {
     @IsArray()
     @IsUUID('all', { each: true })
     @IsOptional()
+    @Transform(({ value }) => {
+        if (typeof value === 'string') {
+            try {
+                return JSON.parse(value);
+            } catch {
+                return [];
+            }
+        }
+        return value;
+    })
     tagIds?: string[];
 
 }

@@ -8,10 +8,41 @@ import * as path from 'path';
 export function generateFaceStorageKey(
   originalname: string,
   characterSlug: string,
+  qrSlug: string
 ): string {
   const ext = path.extname(originalname); // .jpg, .png, ...
   const filename = `${uuidv4()}${ext}`;
   return `img/characters/${characterSlug}/qr-code/${filename}`;
+}
+
+export function createGlobalFaceLock(
+  originalname: string,
+  characterSlug: string,
+  qrSlug: string
+): string {
+  const ext = path.extname(originalname); // .jpg, .png, ...
+  const filename = `${uuidv4()}${ext}`;
+  return `img/characters/${characterSlug}/qr-code/${qrSlug}/globals/${filename}`;
+}
+
+export function createCNFaceLock(
+  originalname: string,
+  characterSlug: string,
+  qrSlug: string
+): string {
+  const ext = path.extname(originalname); // .jpg, .png, ...
+  const filename = `${uuidv4()}${ext}`;
+  return `img/characters/${characterSlug}/qr-code/${qrSlug}/CN/${filename}`;
+}
+
+export function createImageReviewLock(
+  originalname: string,
+  characterSlug: string,
+  qrSlug: string
+): string {
+  const ext = path.extname(originalname); // .jpg, .png, ...
+  const filename = `${uuidv4()}${ext}`;
+  return `img/characters/${characterSlug}/qr-code/${qrSlug}/${filename}`;
 }
 
 /**
@@ -31,4 +62,5 @@ export function generateCategoryKet(
   originalname: string,
 ): string {
   const ext = path.extname(originalname);
-  return `img/category/${categoryName}/cover-photo${ext}`;}
+  return `img/category/${categoryName}/cover-photo${ext}`;
+}

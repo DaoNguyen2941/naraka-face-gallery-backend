@@ -1,5 +1,6 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from '../../../../common/entities/base.entity';
+import { FaceEntity } from '../../faces/entitys/face.entity';
 
 @Entity('files')
 export class FileEntity extends BaseEntity {
@@ -21,4 +22,11 @@ export class FileEntity extends BaseEntity {
   @Column({ nullable: true })
   usage?: string; // ví dụ: 'face_image', 'character_avatar'
 
+  // Mỗi file ảnh review thuộc về 1 face
+  @ManyToOne(() => FaceEntity, face => face.imageReviews, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'face_id' }) // FK trong bảng files
+  faceImageReview: FaceEntity;
+  
 }

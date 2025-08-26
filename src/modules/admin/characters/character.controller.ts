@@ -36,7 +36,7 @@ export class AdminCharactersController {
             .addFileTypeValidator({
                 fileType: 'image'
             })
-            .addMaxSizeValidator({ maxSize: 2_000_000 })
+            .addMaxSizeValidator({ maxSize: 5_000_000 })
             .build({
                 errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
             }),
@@ -52,7 +52,7 @@ export class AdminCharactersController {
         @UploadedFile(
             new ParseFilePipeBuilder()
                 .addFileTypeValidator({ fileType: 'image' })
-                .addMaxSizeValidator({ maxSize: 2_000_000 })
+                .addMaxSizeValidator({ maxSize: 5_000_000 })
                 .build({
                     errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
                     fileIsRequired: false,
