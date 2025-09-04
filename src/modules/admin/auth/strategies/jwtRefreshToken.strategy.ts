@@ -40,8 +40,6 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
       if (!refreshTokenSecret) {
         throw new UnauthorizedException('No refresh token stored');
       }
-      console.log(refreshToken);
-      console.log(refreshTokenSecret);
 
 
       const isRefreshTokenMatching = await bcrypt.compare(

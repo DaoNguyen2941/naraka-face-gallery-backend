@@ -12,6 +12,8 @@ import { CustomRedisModule } from '../core/redis/redis.module';
 import { AdminCategoryModule } from './categorys/category.module';
 import { AdminFaceModule } from './faces/face.module';
 import { AdminTagModule } from './tags/tag.modulle';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAdminAuthGuard } from './auth/guards/jwtAdminAuth.guard';
 @Module({
   imports: [
     TypeOrmModule.forFeature([AdminEntity]),
@@ -30,7 +32,11 @@ import { AdminTagModule } from './tags/tag.modulle';
   ],
   providers: [
     AdminService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAdminAuthGuard,
+    },
   ],
-    exports: [AdminService], 
+  exports: [AdminService],
 })
 export class AdminModule { }

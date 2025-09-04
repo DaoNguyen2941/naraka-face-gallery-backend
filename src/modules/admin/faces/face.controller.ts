@@ -21,6 +21,8 @@ import { CreateFaceDto, DataFaceDto, UpdateFaceDto, GroupFile } from 'src/module
 import { PageOptionsDto, PageDto } from 'src/common/dtos';
 import { FacePageOptionsDto } from 'src/modules/core/faces/dtos';
 import { AdminFaceDto } from './dtos/admin-face.dto';
+import { AdminFaceDto2 } from './dtos/adminFace.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Controller('admin/face')
 export class AdminFaceController {
@@ -28,12 +30,23 @@ export class AdminFaceController {
         private readonly faceService: FaceService,
     ) { }
 
+    // @Get()
+    // async findAll(@Query() query: FacePageOptionsDto) {
+    //     const result = await this.faceService.findAll(query);
+
+    //     return new PageDto(
+    //         result.data.map(face => new AdminFaceDto(face)),
+    //         result.meta,
+    //     );
+    // }
+
     @Get()
     async findAll(@Query() query: FacePageOptionsDto) {
         const result = await this.faceService.findAll(query);
-
+        console.log(result);
+        
         return new PageDto(
-            result.data.map(face => new AdminFaceDto(face)),
+            plainToInstance(AdminFaceDto2, result.data, { excludeExtraneousValues: true }),
             result.meta,
         );
     }

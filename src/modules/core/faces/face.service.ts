@@ -5,7 +5,6 @@ import { FaceEntity } from './entitys/face.entity';
 import { StorageService } from '../object-storage/storage.service';
 import { generateFaceStorageKey, createGlobalFaceLock, createCNFaceLock } from 'src/utils/generate-face-key.util';
 import slugify from 'slugify';
-import { plainToInstance } from 'class-transformer';
 import { FileUsage } from '../object-storage/enums/file-usage.enum';
 import { CreateFaceDto, DataFaceDto, UpdateFaceDto, GroupFile, FacePageOptionsDto } from './dtos';
 import { TagService } from '../tags/tag.service';
@@ -13,7 +12,7 @@ import { CharactersService } from '../characters/characters.service';
 import { CategoryService } from '../categories/category.service';
 import { FileQueueService } from '../queue/service/fileQueue.service';
 import { PageDto, PageMetaDto } from 'src/common/dtos';
-
+import { PublicFaceDetails } from 'src/modules/public/faces/dtos/publicFaceDetails.dto';
 @Injectable()
 export class FaceService {
   constructor(
@@ -26,47 +25,74 @@ export class FaceService {
     private readonly fileQueueService: FileQueueService,
   ) { }
 
-  // async findAll(query?: { search?: string }): Promise<FaceEntity[]> {
-  //   const where = query?.search
-  //     ? { title: ILike(`%${query.search}%`) }
-  //     : {};
-  //   return this.faceRepo.find({
-  //     where,
-  //     order: { createdAt: 'DESC' },
-  //   });
-  // }
-
-async findAll(pageOptionsDto: FacePageOptionsDto): Promise<PageDto<FaceEntity>> {
+  async findAll(
+    pageOptionsDto: FacePageOptionsDto,
+  ): Promise<PageDto<FaceEntity>> {
     const { skip, take, order, tagSlugs, characterSlug } = pageOptionsDto;
+    let ids: number[] | null = null;
 
+    // B1: nếu filter theo tags thì query ra danh sách face.id trước
+    if (tagSlugs?.length) {
+      const idsQb = this.faceRepo.createQueryBuilder("face")
+        .select("face.id", "id")
+        .leftJoin("face.tags", "tag")
+        .where("tag.slug IN (:...tagSlugs)", { tagSlugs })
+        .groupBy("face.id")
+        .having("COUNT(DISTINCT tag.slug) = :tagCount", { tagCount: tagSlugs.length });
+
+      const rawIds = await idsQb.getRawMany();
+      ids = rawIds.map(r => r.id);
+
+      if (ids.length === 0) {
+        return new PageDto([], new PageMetaDto({ itemCount: 0, pageOptionsDto }));
+      }
+    }
+
+    // B2: query chính, lấy đầy đủ quan hệ
     const qb = this.faceRepo.createQueryBuilder("face")
       .leftJoinAndSelect("face.tags", "tag")
       .leftJoinAndSelect("face.character", "character")
-      .orderBy("face.createdAt", order);
+      .leftJoinAndSelect("face.categories", "categories")
+      .leftJoinAndSelect("face.imageReviews", "imageReviews")
+      .leftJoinAndSelect("face.qrCodeCN", "qrCodeCN")
+      .leftJoinAndSelect("face.qrCodeGlobals", "qrCodeGlobals")
+      .orderBy("face.createdAt", order)
+      .skip(skip)
+      .take(take);
 
-    // Filter theo tag
-    if (tagSlugs?.length) {
-      qb.andWhere("tag.slug IN (:...tagSlugs)", { tagSlugs })
-        .groupBy("face.id")
-        .having("COUNT(DISTINCT tag.slug) = :tagCount", { tagCount: tagSlugs.length });
+    // filter theo ids (nếu có tags)
+    if (ids) {
+      qb.andWhere("face.id IN (:...ids)", { ids });
     }
 
-    // Filter theo character
+    // filter theo characterSlug
     if (characterSlug) {
       qb.andWhere("character.slug = :characterSlug", { characterSlug });
     }
 
-    const [entities, total] = await qb.skip(skip).take(take).getManyAndCount();
+    const [entities, total] = await qb.getManyAndCount();
 
-    return new PageDto(entities, new PageMetaDto({ itemCount: total, pageOptionsDto }));
+    return new PageDto(
+      entities,
+      new PageMetaDto({ itemCount: total, pageOptionsDto }),
+    );
   }
 
+
   async findOne(id: string): Promise<FaceEntity> {
-    const character = await this.faceRepo.findOne({ where: { id } });
-    if (!character) {
+    const qrFace = await this.faceRepo.findOne({ where: { id } });
+    if (!qrFace) {
       throw new NotFoundException('QRCode không tồn tại');
     }
-    return character;
+    return qrFace;
+  }
+
+  async findDetails(slug: string) {
+    const qrFace = await this.faceRepo.findOne({ where: { slug } });
+    if (!qrFace) {
+      throw new NotFoundException('QRCode không tồn tại');
+    }
+    return qrFace;
   }
 
   async create(
