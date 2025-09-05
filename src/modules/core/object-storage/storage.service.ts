@@ -9,6 +9,7 @@ import { FileUsage } from './enums/file-usage.enum';
 import { randomUUID } from 'crypto';
 import slugify from 'slugify';
 import { createImageReviewLock } from 'src/utils/generate-face-key.util';
+import { Response } from 'express';
 
 @Injectable()
 export class StorageService {
@@ -25,6 +26,27 @@ export class StorageService {
   ) {
     this.bucketName = this.configService.get<string>('cfR2.bucketName')!;
     this.publicUrl = this.configService.get<string>('cfR2.publicUrl')!;
+  }
+
+  async downloadFile(url: string, res: Response, filename?: string) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
+
+      const contentType = response.headers.get('content-type') || 'application/octet-stream';
+      const buffer = Buffer.from(await response.arrayBuffer());
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${filename || 'downloaded-file'}"`,
+      );
+
+      res.send(buffer);
+    } catch (error) {
+      console.error('Download proxy failed:', error);
+      throw new InternalServerErrorException('Failed to download file');
+    }
   }
 
   async uploadImageReviews(files: Express.Multer.File[], characterSlug: string, qrSlug: string,): Promise<FileEntity[]> {

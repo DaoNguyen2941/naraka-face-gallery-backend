@@ -12,7 +12,8 @@ import {
     UploadedFiles,
     ParseFilePipeBuilder,
     HttpStatus,
-    Query
+    Query,
+    Res
 } from '@nestjs/common';
 import { FaceService } from 'src/modules/core/faces/face.service';
 import { FacePageOptionsDto } from 'src/modules/core/faces/dtos';
@@ -22,12 +23,26 @@ import { plainToInstance } from 'class-transformer';
 import { SkipAuth } from 'src/common/decorate/skipAuth';
 import { ParamsSlugDto } from 'src/common/dtos';
 import { PublicFaceDetails } from './dtos/publicFaceDetails.dto';
+import { StorageService } from 'src/modules/core/object-storage/storage.service';
+import { Response } from 'express';
 
 @Controller('face')
 export class PublicFaceController {
     constructor(
         private readonly faceService: FaceService,
+        private readonly storageService: StorageService,
     ) { }
+
+    @Get('/:slug/download')
+    @SkipAuth()
+    async download(
+        @Query('urlFile') urlFile: string,
+        @Res() res: Response,
+        @Param() params: ParamsSlugDto
+    ) {
+        const { slug } = params
+        return this.storageService.downloadFile(urlFile, res, slug);
+    }
 
     @Get()
     @SkipAuth()
