@@ -13,8 +13,11 @@ import { CategoryService } from '../categories/category.service';
 import { FileQueueService } from '../queue/service/fileQueue.service';
 import { PageDto, PageMetaDto } from 'src/common/dtos';
 import { PublicFaceDetails } from 'src/modules/public/faces/dtos/publicFaceDetails.dto';
+import { RedisCacheService } from '../redis/services/cache.service';
 @Injectable()
 export class FaceService {
+  private readonly CACHE_KEY = 'faces';
+
   constructor(
     @InjectRepository(FaceEntity)
     private readonly faceRepo: Repository<FaceEntity>,
@@ -23,12 +26,22 @@ export class FaceService {
     private readonly categoryService: CategoryService,
     private readonly storageService: StorageService,
     private readonly fileQueueService: FileQueueService,
+    private readonly cacheService: RedisCacheService
+
   ) { }
 
   async findAll(
     pageOptionsDto: FacePageOptionsDto,
   ): Promise<PageDto<FaceEntity>> {
     const { skip, take, order, tagSlugs, characterSlug } = pageOptionsDto;
+
+    const cacheKey = `${this.CACHE_KEY}:${JSON.stringify(pageOptionsDto)}`;
+
+    const cached = await this.cacheService.getCache<PageDto<FaceEntity>>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     let ids: number[] | null = null;
 
     // B1: nếu filter theo tags thì query ra danh sách face.id trước
@@ -72,10 +85,15 @@ export class FaceService {
 
     const [entities, total] = await qb.getManyAndCount();
 
-    return new PageDto(
+    const result = new PageDto(
       entities,
       new PageMetaDto({ itemCount: total, pageOptionsDto }),
     );
+
+    // 2. Lưu cache (TTL = 10 phút)
+    await this.cacheService.setCache(cacheKey, result, 3600);
+
+    return result;
   }
 
 

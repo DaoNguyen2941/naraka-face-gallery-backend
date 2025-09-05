@@ -10,28 +10,42 @@ import {
 import slugify from 'slugify';
 import { plainToInstance, instanceToPlain } from 'class-transformer';
 import { FileUsage } from '../object-storage/enums/file-usage.enum';
+import { RedisCacheService } from '../redis/services/cache.service';
 @Injectable()
 export class CharactersService {
+    private readonly CACHE_KEY = 'characters';
+
     constructor(
         @InjectRepository(CharacterEntity)
         private readonly characterRepo: Repository<CharacterEntity>,
-        private readonly storageService: StorageService
+        private readonly storageService: StorageService,
+        private readonly cacheService: RedisCacheService
+
     ) { }
 
     async findAll(query?: { search?: string }): Promise<DataCharacterDto[]> {
-        const where = query?.search
-            ? { name: ILike(`%${query.search}%`) }
-            : {};
+        const search = query?.search ?? '';
+        const cacheKey = search ? `${this.CACHE_KEY}:search:${search}` : this.CACHE_KEY;
+
+        const cached = await this.cacheService.getCache<DataCharacterDto[]>(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
+        const where = search ? { name: ILike(`%${search}%`) } : {};
         const list = await this.characterRepo.find({
             where,
             order: { createdAt: 'DESC' },
         });
 
         const plainList = instanceToPlain(list) as object[];
-
-        return plainToInstance(DataCharacterDto, plainList, {
+        const result = plainToInstance(DataCharacterDto, plainList, {
             excludeExtraneousValues: true,
-        })
+        });
+
+        await this.cacheService.setCache(cacheKey, result, 7200);
+
+        return result;
     }
 
     async findOne(id: string): Promise<CharacterEntity> {

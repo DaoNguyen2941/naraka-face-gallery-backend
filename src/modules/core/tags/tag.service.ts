@@ -5,12 +5,16 @@ import { TagEntity } from './entitys/tag.entity';
 import { CreateTagDto, UpdateTagDto, DataTagDto } from './dtos';
 import slugify from 'slugify';
 import { plainToInstance } from 'class-transformer';
-
+import { RedisCacheService } from '../redis/services/cache.service';
 @Injectable()
 export class TagService {
+    private readonly CACHE_KEY = 'tag';
+
     constructor(
         @InjectRepository(TagEntity)
         private readonly tagRepo: Repository<TagEntity>,
+        private readonly cacheService: RedisCacheService
+
     ) { }
 
     async findByIds(ids: string[]): Promise<TagEntity[]> {
@@ -22,6 +26,14 @@ export class TagService {
     }
 
     async findAll(query?: { search?: string }): Promise<DataTagDto[]> {
+        const search = query?.search ?? '';
+        const cacheKey = search ? `${this.CACHE_KEY}:search:${search}` : this.CACHE_KEY;
+
+        const cached = await this.cacheService.getCache<DataTagDto[]>(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
         const where = query?.search
             ? { name: ILike(`%${query.search}%`) }
             : {};
@@ -30,9 +42,12 @@ export class TagService {
             order: { createdAt: 'DESC' },
         });
 
-        return plainToInstance(DataTagDto, data, {
+        const result = plainToInstance(DataTagDto, data, {
             excludeExtraneousValues: true,
         })
+        await this.cacheService.setCache(cacheKey, result, 7200);
+
+        return result;
     }
 
     async findOne(id: string): Promise<TagEntity> {

@@ -28,6 +28,6 @@ export class PublicCharacterController {
     @SkipAuth()
     async gets(): Promise<PublicCharacterDto> {
         const result = this.charactersService.findAll()
-        return plainToInstance(PublicCharacterDto, result, { excludeExtraneousValues: true })       
+        return plainToInstance(PublicCharacterDto, result, { excludeExtraneousValues: true })
     }
 }

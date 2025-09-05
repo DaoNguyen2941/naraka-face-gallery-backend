@@ -7,6 +7,7 @@ import { CharactersModule } from '../characters/characters.module';
 import { TagModule } from '../tags/tag.module';
 import { CategoriesModule } from '../categories/categorys.module';
 import { QueueModule } from '../queue/queue.module';
+import { CustomRedisModule } from '../redis/redis.module';
 @Module({
     imports: [
         TypeOrmModule.forFeature([FaceEntity]),
@@ -14,7 +15,8 @@ import { QueueModule } from '../queue/queue.module';
         CharactersModule,
         TagModule,
         CategoriesModule,
-        QueueModule
+        QueueModule,
+        CustomRedisModule
     ],
     providers: [FaceService],
     exports: [FaceService],
