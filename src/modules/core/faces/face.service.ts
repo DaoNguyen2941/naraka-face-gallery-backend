@@ -106,7 +106,7 @@ export class FaceService {
   }
 
   async findDetails(slug: string) {
-    const qrFace = await this.faceRepo.findOne({ where: { slug } });
+    const qrFace = await this.faceRepo.findOne({ where: { slug } });    
     if (!qrFace) {
       throw new NotFoundException('QRCode không tồn tại');
     }

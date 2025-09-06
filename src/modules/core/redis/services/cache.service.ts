@@ -4,7 +4,16 @@ import { Redis } from 'ioredis';
 
 @Injectable()
 export class RedisCacheService {
-  constructor(@InjectRedis() private readonly redis: Redis) {}
+  constructor(@InjectRedis() private readonly redis: Redis) { }
+
+  async incr(key: string, ttl?: number): Promise<number> {
+    const result = await this.redis.incr(key);
+    if (ttl) {
+      await this.redis.expire(key, ttl);
+    }
+    return result;
+  }
+
 
   async mGetCache<T>(keys: string[]): Promise<(T | null)[]> {
     const data = await this.redis.mget(...keys);
@@ -15,22 +24,22 @@ export class RedisCacheService {
     return await this.redis.hget(key, value)
   }
 
-    /** 
-   * Lưu cache vào Redis 
-   * @param key - Khóa lưu cache
-   * @param value - thuộc tính của value cần xóa
-   */
+  /** 
+ * Lưu cache vào Redis 
+ * @param key - Khóa lưu cache
+ * @param value - thuộc tính của value cần xóa
+ */
   async deleteHsetCache(key: string): Promise<number> {
     return await this.redis.hdel(key)
   }
-    /** 
-   * Lưu cache vào Redis 
-   * @param key - Khóa lưu cache
-   * @param value - Dữ liệu cần lưu
-   */
+  /** 
+ * Lưu cache vào Redis 
+ * @param key - Khóa lưu cache
+ * @param value - Dữ liệu cần lưu
+ */
   async setHsetCache(key: string, value: object,) {
     const entries = Object.entries(value).flat(); // Chuyển object thành array key-value
-  await this.redis.hset(key, ...entries);
+    await this.redis.hset(key, ...entries);
   }
 
   /** 

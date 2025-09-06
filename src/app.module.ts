@@ -8,6 +8,8 @@ import { DatabaseModule } from './database/database.module';
 import { CustomRedisModule } from './modules/core/redis/redis.module';
 import { QueueModule } from './modules/core/queue/queue.module';
 import { PublicModule } from './modules/public/public.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TasksModule } from './modules/core/tasks/task.module';
 @Module({
   imports: [
     UseConfigModule,
@@ -22,6 +24,8 @@ import { PublicModule } from './modules/public/public.module';
     AdminModule,
     CustomRedisModule,
     PublicModule,
+    ScheduleModule.forRoot(),
+    TasksModule
   ],
   providers: []
 })
