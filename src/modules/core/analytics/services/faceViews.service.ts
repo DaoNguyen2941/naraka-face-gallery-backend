@@ -42,7 +42,7 @@ export class FaceViewsService {
     });
 
     if (existing) {
-        existing.views = views;
+        existing.views += views;
         return this.faceViewsRepo.save(existing);
     } else {
         const record = this.faceViewsRepo.create({ face_id: faceId, date, views, slug: slug });

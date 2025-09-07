@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression,Interval, Timeout } from '@nestjs/schedule';
+import { Cron, CronExpression, Interval, Timeout } from '@nestjs/schedule';
 import { RedisCacheService } from '../redis/services/cache.service';
 import { FaceViewsService } from '../analytics/services/faceViews.service';
-
+import { TrafficAnalysisService } from '../analytics/services/trafficAnalysis.service';
+import { KEY_CACHE_ANALYTICS } from '../analytics/constants';
 @Injectable()
 export class TasksService {
     private readonly logger = new Logger(TasksService.name);
@@ -10,29 +11,62 @@ export class TasksService {
     constructor(
         private readonly redisCache: RedisCacheService,
         private readonly faceViewsService: FaceViewsService,
+        private readonly trafficService: TrafficAnalysisService,
 
     ) { }
 
     @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
     async handleFlush() {
         const today = new Date().toISOString().slice(0, 10);
-        const pattern = `analytics:face:${today}:*`;
-        const keys = await this.redisCache['redis'].keys(pattern);
 
-        for (const key of keys) {
-            const parts = key.split(':'); // analytics:face:2025-09-06:slug-or-id
-            const date = parts[2];
+        // --- Flush Face Views ---
+        await this.flushPattern(`${KEY_CACHE_ANALYTICS.FACE}:${today}:*`, async (key) => {
+            // key = analytics:face:2025-09-06:faceSlug
+            const parts = key.split(':');
             const faceSlug = parts[3];
-            console.log(faceSlug);
-            
+
             const views = await this.redisCache.getCache<number>(key);
-            if (!views) continue;
+            if (!views) return;
 
-            await this.faceViewsService.saveFaceView(faceSlug, date, Number(views));
-            await this.redisCache.deleteCache(key); 
-        }
+            await this.faceViewsService.saveFaceView(faceSlug, today, views);
 
-        this.logger.log(`Flushed ${keys.length} face view keys to DB`);
+            await this.redisCache.deleteCache(key);
+        });
+
+        // --- Flush Top Pages / Traffic Analysis ---
+        await this.flushPattern(`${KEY_CACHE_ANALYTICS.PAGE}:${today}:*`, async (key) => {
+            // key = analytics:pageviews:2025-09-06:/some/path
+            const parts = key.split(':');
+            const path = parts.slice(3).join(':'); // để chắc chắn path có dấu ":"
+
+            const views = await this.redisCache.getCache<number>(key);
+            if (!views) return;
+
+            await this.trafficService.savePageview(path, today, views);
+
+            await this.redisCache.deleteCache(key);
+        });
+
+        this.logger.log(`Flushed Redis counters to DB for ${today}`);
+    }
+
+    /** SCAN incremental */
+    private async flushPattern(
+        pattern: string,
+        handler: (key: string) => Promise<void>,
+    ) {
+        let cursor = '0';
+        do {
+            const [newCursor, keys] = await this.redisCache.scan(pattern,100);
+            cursor = newCursor;
+            for (const key of keys) {
+                try {
+                    await handler(key);
+                } catch (err) {
+                    this.logger.error(`Error processing key ${key}: ${err}`);
+                }
+            }
+        } while (cursor !== '0');
     }
 
     // @Cron('45 * * * * *')
