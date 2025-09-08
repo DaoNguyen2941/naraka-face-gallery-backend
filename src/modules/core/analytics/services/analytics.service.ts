@@ -2,7 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { RedisCacheService } from '../../redis/services/cache.service';
 import { KEY_CACHE_ANALYTICS } from '../constants';
-
+import { CreatePageviewDto } from 'src/modules/public/Analytics/dtos/analytics.dto';
 @Injectable()
 export class AnalyticsService {
   constructor(
@@ -20,11 +20,26 @@ export class AnalyticsService {
     return await this.cacheService.incr(key, 86400);
   }
 
-  async trackPageViewByPath(path: string) {
+  async trackPageViewByPath(data: CreatePageviewDto) {
+    const { path, visitorId, sessionId, newVisitor } = data
+
     const today = new Date().toISOString().slice(0, 10);
+
     const key = `${KEY_CACHE_ANALYTICS.PAGE}:${today}:${path}`;
-    return await this.cacheService.incr(key, 86400);
+    await this.cacheService.incr(key, 86400);
+
+    // unique visitors
+    await this.cacheService.setHsetCache(`${KEY_CACHE_ANALYTICS.VISITOR}:${today}`, {
+      [visitorId]: 1,
+    });
+
+    // unique sessions
+    await this.cacheService.setHsetCache(`${KEY_CACHE_ANALYTICS.SESSION}:${today}`, {
+      [sessionId]: 1,
+    });
+    
+    if (newVisitor) {
+      await this.cacheService.incr(`${KEY_CACHE_ANALYTICS.NEW_VISITOR}:${today}`)
+    }
   }
-
-
 }

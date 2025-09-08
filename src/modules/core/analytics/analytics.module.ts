@@ -1,17 +1,25 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { CustomRedisModule } from '../redis/redis.module';
-import { AnalyticsFaceViews } from "./entities/analyticsFaceViews.entity";
-import { TrafficAnalysisEntity } from "./entities/trafficAnalysis.entity";
-import { AnalyticsService } from "./services/analytics.service";
-import { FaceViewsService } from "./services/faceViews.service";
+import {
+    DailyStatisticsService,
+    AnalyticsService,
+    FaceViewsService,
+    TrafficAnalysisService
+} from "./services";
 import { FaceModule } from "../faces/face.moduler";
-import { TrafficAnalysisService } from "./services/trafficAnalysis.service";
+import {
+    AnalyticsDailyStatsEntity,
+    TrafficAnalysisEntity,
+    AnalyticsFaceViewsEntity,
+} from "./entities";
+
 @Module({
     imports: [
         TypeOrmModule.forFeature([
-            AnalyticsFaceViews,
+            AnalyticsFaceViewsEntity,
             TrafficAnalysisEntity,
+            AnalyticsDailyStatsEntity,
         ]),
         CustomRedisModule,
         FaceModule,
@@ -20,11 +28,13 @@ import { TrafficAnalysisService } from "./services/trafficAnalysis.service";
         AnalyticsService,
         FaceViewsService,
         TrafficAnalysisService,
+        DailyStatisticsService
     ],
     exports: [
         AnalyticsService,
         FaceViewsService,
-        TrafficAnalysisService
+        TrafficAnalysisService,
+        DailyStatisticsService
     ]
 })
 

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { TrafficAnalysisEntity } from '../entities/trafficAnalysis.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RedisCacheService } from '../../redis/services/cache.service';
 
 @Injectable()
 export class TrafficAnalysisService {

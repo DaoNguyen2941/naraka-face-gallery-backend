@@ -3,6 +3,7 @@ import { Controller, Post, Param, Body } from '@nestjs/common';
 import { AnalyticsService } from 'src/modules/core/analytics/services/analytics.service';
 import { ParamsSlugDto } from 'src/common/dtos';
 import { SkipAuth } from 'src/common/decorate/skipAuth';
+import { CreatePageviewDto } from './dtos/analytics.dto';
 
 @Controller('analytics')
 export class PublicAnalyticsController {
@@ -21,8 +22,10 @@ export class PublicAnalyticsController {
 
     @Post('/pageview')
     @SkipAuth()
-    async trackPageView(@Body('path') path: string) {
-        await this.analyticsService.trackPageViewByPath(path)
+    async trackPageView(
+        @Body() dto: CreatePageviewDto,
+    ) {
+        await this.analyticsService.trackPageViewByPath(dto)
         return {
             success: true,
         };

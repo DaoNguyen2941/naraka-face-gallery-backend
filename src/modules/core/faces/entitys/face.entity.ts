@@ -13,7 +13,7 @@ import { CharacterEntity } from '../../characters/entitys/character.entity';
 import { CategoryEntity } from '../../categories/entitys/category.entity';
 import { TagEntity } from '../../tags/entitys/tag.entity';
 import { FileEntity } from 'src/modules/core/object-storage/entitys/file.entity';
-import { AnalyticsFaceViews } from '../../analytics/entities/analyticsFaceViews.entity';
+import { AnalyticsFaceViewsEntity } from '../../analytics/entities/analyticsFaceViews.entity';
 @Entity('faces')
 export class FaceEntity extends BaseEntity {
   @Column()
@@ -65,6 +65,6 @@ export class FaceEntity extends BaseEntity {
   @Column({ type: 'varchar', nullable: true })
   source: string;
 
-  @OneToMany(() => AnalyticsFaceViews, afv => afv.face)
-  analyticsFaceViews: AnalyticsFaceViews[];
+  @OneToMany(() => AnalyticsFaceViewsEntity, afv => afv.face)
+  analyticsFaceViews: AnalyticsFaceViewsEntity[];
 }

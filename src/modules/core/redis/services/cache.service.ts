@@ -6,18 +6,13 @@ import { Redis } from 'ioredis';
 export class RedisCacheService {
   constructor(@InjectRedis() private readonly redis: Redis) { }
 
-  async scan(pattern: string, count = 100): Promise<string[]> {
-    let cursor = '0';
-    let result: string[] = [];
-
-    do {
-      const [newCursor, keys] = await this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', count);
-      cursor = newCursor;
-      result.push(...keys);
-    } while (cursor !== '0');
-
-    return result;
-  }
+async scan(
+  cursor: string,
+  pattern: string,
+  count = 100,
+): Promise<[string, string[]]> {
+  return this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', count);
+}
 
   async getKeys(pattern: string): Promise<string[]> {
     return this.redis.keys(pattern);

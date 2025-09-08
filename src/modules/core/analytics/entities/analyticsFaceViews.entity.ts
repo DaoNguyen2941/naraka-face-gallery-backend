@@ -4,7 +4,7 @@ import { FaceEntity } from '../../faces/entitys/face.entity';
 import { BaseEntity } from '../../../../common/entities/base.entity';
 
 @Entity('analytics_face_views')
-export class AnalyticsFaceViews extends BaseEntity {
+export class AnalyticsFaceViewsEntity extends BaseEntity {
   @Column({ type: 'date' })
   date: string;
 
