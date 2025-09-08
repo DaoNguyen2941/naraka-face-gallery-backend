@@ -26,7 +26,7 @@ export class AnalyticsService {
     const today = new Date().toISOString().slice(0, 10);
 
     const key = `${KEY_CACHE_ANALYTICS.PAGE}:${today}:${path}`;
-    await this.cacheService.incr(key, 86400);
+    await this.cacheService.incr(key);
 
     // unique visitors
     await this.cacheService.setHsetCache(`${KEY_CACHE_ANALYTICS.VISITOR}:${today}`, {

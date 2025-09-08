@@ -4,6 +4,7 @@ import { RedisCacheService } from '../redis/services/cache.service';
 import { FaceViewsService } from '../analytics/services/faceViews.service';
 import { KEY_CACHE_ANALYTICS } from '../analytics/constants';
 import { DailyStatisticsService, TrafficAnalysisService } from '../analytics/services';
+import { toVNTime } from 'src/utils/dayjs';
 
 @Injectable()
 export class TasksService {
@@ -16,14 +17,16 @@ export class TasksService {
         private readonly dailyStatisticsService: DailyStatisticsService,
     ) { }
 
-    @Cron(CronExpression.EVERY_HOUR)
+    @Cron(CronExpression.EVERY_HOUR, {
+        timeZone: 'Asia/Ho_Chi_Minh',
+    })
     async flushHourlyStats() {
-        const now = new Date();
-        let today = now.toISOString().slice(0, 10);
-        const hour = now.getHours()
+        const now = toVNTime();
+        const hour = now.hour()
+        let today = now.format("YYYY-MM-DD");
         if (hour === 0) {
-            now.setDate(now.getDate() - 1);
-            today = now.toISOString().slice(0, 10);
+            const yesterday = now.subtract(1, "day");
+            today = yesterday.format("YYYY-MM-DD")
         }
         // --- Tổng pageviews ---
         let totalPageviews = 0;
@@ -63,20 +66,29 @@ export class TasksService {
         this.logger.log(`Hourly statistics update for ${today}`);
     }
 
-    @Cron('5 0 * * *')
+    @Cron(CronExpression.EVERY_HOUR, {
+        timeZone: 'Asia/Ho_Chi_Minh',
+    })
     async cleanupRedis() {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const date = yesterday.toISOString().slice(0, 10);
-        await this.redisCache.deleteCache(`${KEY_CACHE_ANALYTICS.VISITOR}:${date}`);
-        await this.redisCache.deleteCache(`${KEY_CACHE_ANALYTICS.SESSION}:${date}`);
-        await this.redisCache.deleteCache(`${KEY_CACHE_ANALYTICS.NEW_VISITOR}:${date}`);
-        this.logger.log(`[Cleanup] Deleted Redis cache for ${date}`);
+        const now = toVNTime();
+        const yesterday = now.subtract(1, "day");
+        await this.redisCache.deleteCache(`${KEY_CACHE_ANALYTICS.VISITOR}:${yesterday}`);
+        await this.redisCache.deleteCache(`${KEY_CACHE_ANALYTICS.SESSION}:${yesterday}`);
+        await this.redisCache.deleteCache(`${KEY_CACHE_ANALYTICS.NEW_VISITOR}:${yesterday}`);
+        this.logger.log(`[Cleanup] Deleted Redis cache for ${yesterday}`);
     }
 
-    @Cron(CronExpression.EVERY_HOUR)
+    @Cron(CronExpression.EVERY_HOUR, {
+        timeZone: 'Asia/Ho_Chi_Minh',
+    })
     async updateFaceViewHourly() {
-        const today = new Date().toISOString().slice(0, 10);
+        const now = toVNTime();
+        const hour = now.hour()
+        let today = now.format("YYYY-MM-DD");
+        if (hour === 0) {
+            const yesterday = now.subtract(1, "day");
+            today = yesterday.format("YYYY-MM-DD")
+        }
         // --- Flush Face Views ---
         await this.flushPattern(`${KEY_CACHE_ANALYTICS.FACE}:${today}:*`, async (key) => {
             // key = analytics:face:2025-09-06:faceSlug
