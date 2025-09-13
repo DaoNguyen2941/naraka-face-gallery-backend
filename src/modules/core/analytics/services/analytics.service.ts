@@ -22,22 +22,17 @@ export class AnalyticsService {
 
   async trackPageViewByPath(data: CreatePageviewDto) {
     const { path, visitorId, sessionId, newVisitor } = data
-
     const today = new Date().toISOString().slice(0, 10);
-
     const key = `${KEY_CACHE_ANALYTICS.PAGE}:${today}:${path}`;
     await this.cacheService.incr(key);
-
     // unique visitors
     await this.cacheService.setHsetCache(`${KEY_CACHE_ANALYTICS.VISITOR}:${today}`, {
       [visitorId]: 1,
     });
-
     // unique sessions
     await this.cacheService.setHsetCache(`${KEY_CACHE_ANALYTICS.SESSION}:${today}`, {
       [sessionId]: 1,
     });
-    
     if (newVisitor) {
       await this.cacheService.incr(`${KEY_CACHE_ANALYTICS.NEW_VISITOR}:${today}`)
     }

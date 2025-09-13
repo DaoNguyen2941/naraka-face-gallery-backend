@@ -25,6 +25,7 @@ export class PublicAnalyticsController {
     async trackPageView(
         @Body() dto: CreatePageviewDto,
     ) {
+        console.log(dto);
         await this.analyticsService.trackPageViewByPath(dto)
         return {
             success: true,

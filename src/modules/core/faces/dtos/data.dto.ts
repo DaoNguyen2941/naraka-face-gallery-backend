@@ -16,7 +16,7 @@ export class DataFaceDto extends CreateFaceDto {
     slug: string
 
     @Expose()
-    @Type(()=> DataTagDto)
+    @Type(() => DataTagDto)
     tags: DataTagDto[];
 
     @Expose()
@@ -27,4 +27,31 @@ export class DataFaceDto extends CreateFaceDto {
 
     @Expose()
     image?: DataFileDto;
+}
+// DTO / Type trả về cho frontend
+export class FaceWithViewsDto {
+    id: string;
+    title: string;
+    description?: string;
+
+    @Type(() => DataCharacterDto)
+    character: DataCharacterDto;
+
+    @Type(() => DataTagDto)
+    tags: DataTagDto;
+
+    @Type(() => DataFileDto)
+    imageReviews: DataFileDto[];
+
+    @Type(() => DataFileDto)
+    qrCodeCN?: DataFileDto;
+
+    @Type(() => DataFileDto)
+    qrCodeGlobals?: DataFileDto;
+
+    createdAt: Date;
+    updatedAt: Date;
+    slug: string;
+
+    totalViews: number;
 }

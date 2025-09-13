@@ -6,13 +6,17 @@ import { Redis } from 'ioredis';
 export class RedisCacheService {
   constructor(@InjectRedis() private readonly redis: Redis) { }
 
-async scan(
-  cursor: string,
-  pattern: string,
-  count = 100,
-): Promise<[string, string[]]> {
-  return this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', count);
-}
+
+  async getHashCount(key: string) {
+    return await this.redis.hlen(key);
+  }
+  async scan(
+    cursor: string,
+    pattern: string,
+    count = 100,
+  ): Promise<[string, string[]]> {
+    return this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', count);
+  }
 
   async getKeys(pattern: string): Promise<string[]> {
     return this.redis.keys(pattern);

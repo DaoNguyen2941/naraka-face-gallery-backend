@@ -39,7 +39,7 @@ export class FaceViewsService {
             existing.views += views;
             return this.faceViewsRepo.save(existing);
         } else {
-            const record = this.faceViewsRepo.create({ face_id: faceId, date, views, slug: slug });
+            const record = this.faceViewsRepo.create({ face_id: faceId, date, views, slug: `${slug}:${date}` });
             return this.faceViewsRepo.save(record);
         }
     }

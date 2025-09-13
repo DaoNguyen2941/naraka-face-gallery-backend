@@ -3,17 +3,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, In } from 'typeorm';
 import { FaceEntity } from './entitys/face.entity';
 import { StorageService } from '../object-storage/storage.service';
-import { generateFaceStorageKey, createGlobalFaceLock, createCNFaceLock } from 'src/utils/generate-face-key.util';
+import { createGlobalFaceLock, createCNFaceLock } from 'src/utils/generate-face-key.util';
 import slugify from 'slugify';
 import { FileUsage } from '../object-storage/enums/file-usage.enum';
-import { CreateFaceDto, DataFaceDto, UpdateFaceDto, GroupFile, FacePageOptionsDto } from './dtos';
+import { CreateFaceDto, UpdateFaceDto, GroupFile, FacePageOptionsDto, FaceWithViewsDto } from './dtos';
 import { TagService } from '../tags/tag.service';
 import { CharactersService } from '../characters/characters.service';
 import { CategoryService } from '../categories/category.service';
 import { FileQueueService } from '../queue/service/fileQueue.service';
 import { PageDto, PageMetaDto } from 'src/common/dtos';
-import { PublicFaceDetails } from 'src/modules/public/faces/dtos/publicFaceDetails.dto';
 import { RedisCacheService } from '../redis/services/cache.service';
+import { AnalyticsFaceViewsEntity } from '../analytics/entities';
+import { plainToInstance } from 'class-transformer';
+
 @Injectable()
 export class FaceService {
   private readonly CACHE_KEY = 'faces';
@@ -27,13 +29,45 @@ export class FaceService {
     private readonly storageService: StorageService,
     private readonly fileQueueService: FileQueueService,
     private readonly cacheService: RedisCacheService
-
   ) { }
+
+  async getFacesWithViews() {
+    return this.faceRepo
+      .createQueryBuilder('face')
+      // Join các relation cần thiết
+      .leftJoinAndSelect('face.character', 'character')
+      .leftJoinAndSelect('face.imageReviews', 'imageReviews')
+      .leftJoinAndSelect('face.qrCodeCN', 'qrCodeCN')
+      .leftJoinAndSelect('face.qrCodeGlobals', 'qrCodeGlobals')
+      .leftJoinAndSelect('face.categories', 'categories')
+      .leftJoinAndSelect('face.tags', 'tags')
+      // Join lượt xem để tính tổng
+      .leftJoin('face.analyticsFaceViews', 'afv')
+      .addSelect('SUM(afv.views)', 'totalViews')
+      // Group by face.id để SUM hoạt động
+      .groupBy('face.id')
+      .addGroupBy('character.id')
+      .addGroupBy('qrCodeCN.id')
+      .addGroupBy('qrCodeGlobals.id')
+      .addGroupBy('imageReviews.id')
+      .addGroupBy('categories.id')
+      .addGroupBy('tags.id')
+      // Sắp xếp theo tổng lượt view giảm dần
+      .orderBy('totalViews', 'DESC')
+      .getRawAndEntities() // Lấy cả entities và raw totalViews
+      .then(result => {
+        // Gán totalViews vào entity để trả về
+        return result.entities.map((face, index) => {
+          return { ...face, totalViews: parseInt(result.raw[index].totalViews) || 0 };
+        });
+      });
+  }
+
 
   async findAll(
     pageOptionsDto: FacePageOptionsDto,
   ): Promise<PageDto<FaceEntity>> {
-    const { skip, take, order, tagSlugs, characterSlug } = pageOptionsDto;
+    const { skip, take, order, tagSlugs, characterSlug, search } = pageOptionsDto;
 
     const cacheKey = `${this.CACHE_KEY}:${JSON.stringify(pageOptionsDto)}`;
 
@@ -83,6 +117,12 @@ export class FaceService {
       qb.andWhere("character.slug = :characterSlug", { characterSlug });
     }
 
+    // filter theo title (search)
+    if (search) {
+      qb.andWhere("face.title LIKE :title", { title: `%${search}%` });
+      // Nếu dùng MySQL thì đổi ILIKE thành LIKE
+    }
+
     const [entities, total] = await qb.getManyAndCount();
 
     const result = new PageDto(
@@ -106,7 +146,7 @@ export class FaceService {
   }
 
   async findDetails(slug: string) {
-    const qrFace = await this.faceRepo.findOne({ where: { slug } });    
+    const qrFace = await this.faceRepo.findOne({ where: { slug } });
     if (!qrFace) {
       throw new NotFoundException('QRCode không tồn tại');
     }

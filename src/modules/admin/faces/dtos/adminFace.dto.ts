@@ -1,6 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Expose, Transform, Type } from "class-transformer";
-import { DataFaceDto } from "src/modules/core/faces/dtos";
 import { DataFileDto } from "src/modules/core/object-storage/dtos/dataFile.dto";
 import { DataTagDto } from "src/modules/core/tags/dtos";
 import { DataCharacterDto } from "src/modules/core/characters/dtos";

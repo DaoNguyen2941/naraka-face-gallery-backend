@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsArray, IsOptional, IsString } from "class-validator";
+import { IsArray, IsOptional, IsString, IsIn } from "class-validator";
 import { PageOptionsDto } from "src/common/dtos";
 import { Transform } from 'class-transformer';
 
@@ -25,4 +25,23 @@ export class FacePageOptionsDto extends PageOptionsDto {
   @IsOptional()
   @IsString()
   readonly characterSlug?: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: "",
+    example: "name",
+  })
+  @IsOptional()
+  @IsString()
+  readonly search?: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: "Sort face: 'new' = mới cập nhật, 'hot' = nhiều view nhất",
+    example: "new",
+  })
+  @IsOptional()
+  @IsIn(['new', 'hot'])
+  readonly sort?: 'new' | 'hot';
+
 }

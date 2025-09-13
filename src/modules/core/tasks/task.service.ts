@@ -9,7 +9,6 @@ import { toVNTime } from 'src/utils/dayjs';
 @Injectable()
 export class TasksService {
     private readonly logger = new Logger(TasksService.name);
-
     constructor(
         private readonly redisCache: RedisCacheService,
         private readonly faceViewsService: FaceViewsService,
@@ -17,7 +16,7 @@ export class TasksService {
         private readonly dailyStatisticsService: DailyStatisticsService,
     ) { }
 
-    @Cron(CronExpression.EVERY_HOUR, {
+    @Cron(CronExpression.EVERY_5_MINUTES, {
         timeZone: 'Asia/Ho_Chi_Minh',
     })
     async flushHourlyStats() {
@@ -39,34 +38,22 @@ export class TasksService {
             await this.trafficService.savePageview(path, today, views);
             await this.redisCache.deleteCache(key);
         });
-
-        // --- Unique visitors ---
-        const visitorKeys = await this.redisCache.getHsetCache(
-            `${KEY_CACHE_ANALYTICS.VISITOR}:${today}`,
-            'all',
-        );
-        // --- Unique sessions ---
-        const sessionKeys = await this.redisCache.getHsetCache(
-            `analytics:sessions:${today}`,
-            'all',
-        );
+        const visitorCount = await this.redisCache.getHashCount(`${KEY_CACHE_ANALYTICS.VISITOR}:${today}`);
+        const sessionCount = await this.redisCache.getHashCount(`${KEY_CACHE_ANALYTICS.SESSION}:${today}`);
         const countNewVisitor = await this.redisCache.getCache<number>(`${KEY_CACHE_ANALYTICS.NEW_VISITOR}:${today}`)
-
-        const totalVisitors = visitorKeys ? Object.keys(visitorKeys).length : 0;
-        const totalSessions = sessionKeys ? Object.keys(sessionKeys).length : 0;
 
         const newData = {
             date: today,
             pageviews: totalPageviews,
-            sessions: totalSessions,
-            unique_visitors: totalVisitors,
+            sessions: sessionCount,
+            unique_visitors: visitorCount,
             new_visitor: countNewVisitor || 0
         }
         await this.dailyStatisticsService.save(newData)
         this.logger.log(`Hourly statistics update for ${today}`);
     }
 
-    @Cron(CronExpression.EVERY_HOUR, {
+    @Cron('5 0 * * *', {
         timeZone: 'Asia/Ho_Chi_Minh',
     })
     async cleanupRedis() {
@@ -78,7 +65,7 @@ export class TasksService {
         this.logger.log(`[Cleanup] Deleted Redis cache for ${yesterday}`);
     }
 
-    @Cron(CronExpression.EVERY_HOUR, {
+    @Cron(CronExpression.EVERY_5_MINUTES, {
         timeZone: 'Asia/Ho_Chi_Minh',
     })
     async updateFaceViewHourly() {
