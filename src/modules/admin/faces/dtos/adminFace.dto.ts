@@ -4,7 +4,7 @@ import { DataFileDto } from "src/modules/core/object-storage/dtos/dataFile.dto";
 import { DataTagDto } from "src/modules/core/tags/dtos";
 import { DataCharacterDto } from "src/modules/core/characters/dtos";
 import { DataCategoryDto } from "src/modules/core/categories/dtos";
-
+import { IsString, IsNumber } from "class-validator";
 export class AdminFaceDto2 {
   @ApiProperty()
   @Expose()
@@ -55,4 +55,10 @@ export class AdminFaceDto2 {
   @Expose()
   @Type(() => DataFileDto)
   qrCodeGlobals?: DataFileDto;
+
+  @ApiProperty()
+  @Expose()
+  @IsNumber()
+  views: string;
+
 }

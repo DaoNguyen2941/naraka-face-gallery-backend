@@ -35,6 +35,8 @@ export class FaceViewsService {
             where: { face_id: faceId, date },
         });
 
+        await this.faceService.addViews(faceId, views)
+
         if (existing) {
             existing.views += views;
             return this.faceViewsRepo.save(existing);

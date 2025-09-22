@@ -65,6 +65,6 @@ export class FaceEntity extends BaseEntity {
   @Column({ type: 'varchar', nullable: true })
   source: string;
 
-  @OneToMany(() => AnalyticsFaceViewsEntity, afv => afv.face)
-  analyticsFaceViews: AnalyticsFaceViewsEntity[];
+  @Column({ type: 'int', default: 0 })
+  views: number;
 }

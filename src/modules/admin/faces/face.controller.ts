@@ -14,13 +14,12 @@ import {
     HttpStatus,
     Query
 } from '@nestjs/common';
-import { FileInterceptor, FileFieldsInterceptor } from "@nestjs/platform-express";
+import {  FileFieldsInterceptor } from "@nestjs/platform-express";
 import { ParamsIdDto } from 'src/common/dtos/ParamsId.dto';
 import { FaceService } from 'src/modules/core/faces/face.service';
-import { CreateFaceDto, DataFaceDto, UpdateFaceDto, GroupFile } from 'src/modules/core/faces/dtos';
-import { PageOptionsDto, PageDto } from 'src/common/dtos';
+import { CreateFaceDto, UpdateFaceDto, GroupFile } from 'src/modules/core/faces/dtos';
+import { PageDto } from 'src/common/dtos';
 import { FacePageOptionsDto } from 'src/modules/core/faces/dtos';
-import { AdminFaceDto } from './dtos/admin-face.dto';
 import { AdminFaceDto2 } from './dtos/adminFace.dto';
 import { plainToInstance } from 'class-transformer';
 
@@ -30,21 +29,9 @@ export class AdminFaceController {
         private readonly faceService: FaceService,
     ) { }
 
-    // @Get()
-    // async findAll(@Query() query: FacePageOptionsDto) {
-    //     const result = await this.faceService.findAll(query);
-
-    //     return new PageDto(
-    //         result.data.map(face => new AdminFaceDto(face)),
-    //         result.meta,
-    //     );
-    // }
-
     @Get()
-    async findAll(@Query() query: FacePageOptionsDto) {
-        const result = await this.faceService.findAll(query);
-        console.log(result);
-        
+    async findAll(@Query() query: FacePageOptionsDto): Promise<PageDto<AdminFaceDto2>> {
+        const result = await this.faceService.findAll(query);        
         return new PageDto(
             plainToInstance(AdminFaceDto2, result.data, { excludeExtraneousValues: true }),
             result.meta,

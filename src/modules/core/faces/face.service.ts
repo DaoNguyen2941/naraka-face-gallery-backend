@@ -13,8 +13,6 @@ import { CategoryService } from '../categories/category.service';
 import { FileQueueService } from '../queue/service/fileQueue.service';
 import { PageDto, PageMetaDto } from 'src/common/dtos';
 import { RedisCacheService } from '../redis/services/cache.service';
-import { AnalyticsFaceViewsEntity } from '../analytics/entities';
-import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class FaceService {
@@ -31,43 +29,14 @@ export class FaceService {
     private readonly cacheService: RedisCacheService
   ) { }
 
-  async getFacesWithViews() {
-    return this.faceRepo
-      .createQueryBuilder('face')
-      // Join các relation cần thiết
-      .leftJoinAndSelect('face.character', 'character')
-      .leftJoinAndSelect('face.imageReviews', 'imageReviews')
-      .leftJoinAndSelect('face.qrCodeCN', 'qrCodeCN')
-      .leftJoinAndSelect('face.qrCodeGlobals', 'qrCodeGlobals')
-      .leftJoinAndSelect('face.categories', 'categories')
-      .leftJoinAndSelect('face.tags', 'tags')
-      // Join lượt xem để tính tổng
-      .leftJoin('face.analyticsFaceViews', 'afv')
-      .addSelect('SUM(afv.views)', 'totalViews')
-      // Group by face.id để SUM hoạt động
-      .groupBy('face.id')
-      .addGroupBy('character.id')
-      .addGroupBy('qrCodeCN.id')
-      .addGroupBy('qrCodeGlobals.id')
-      .addGroupBy('imageReviews.id')
-      .addGroupBy('categories.id')
-      .addGroupBy('tags.id')
-      // Sắp xếp theo tổng lượt view giảm dần
-      .orderBy('totalViews', 'DESC')
-      .getRawAndEntities() // Lấy cả entities và raw totalViews
-      .then(result => {
-        // Gán totalViews vào entity để trả về
-        return result.entities.map((face, index) => {
-          return { ...face, totalViews: parseInt(result.raw[index].totalViews) || 0 };
-        });
-      });
+  async addViews(id: string, views: number) {
+    return await this.faceRepo.increment({ id: id }, "views", views);
   }
-
 
   async findAll(
     pageOptionsDto: FacePageOptionsDto,
   ): Promise<PageDto<FaceEntity>> {
-    const { skip, take, order, tagSlugs, characterSlug, search } = pageOptionsDto;
+    const { skip, take, order, tagSlugs, characterSlug, search, sort } = pageOptionsDto;
 
     const cacheKey = `${this.CACHE_KEY}:${JSON.stringify(pageOptionsDto)}`;
 
@@ -95,7 +64,7 @@ export class FaceService {
       }
     }
 
-    // B2: query chính, lấy đầy đủ quan hệ
+    // B2: query chính
     const qb = this.faceRepo.createQueryBuilder("face")
       .leftJoinAndSelect("face.tags", "tag")
       .leftJoinAndSelect("face.character", "character")
@@ -103,7 +72,6 @@ export class FaceService {
       .leftJoinAndSelect("face.imageReviews", "imageReviews")
       .leftJoinAndSelect("face.qrCodeCN", "qrCodeCN")
       .leftJoinAndSelect("face.qrCodeGlobals", "qrCodeGlobals")
-      .orderBy("face.createdAt", order)
       .skip(skip)
       .take(take);
 
@@ -120,21 +88,32 @@ export class FaceService {
     // filter theo title (search)
     if (search) {
       qb.andWhere("face.title LIKE :title", { title: `%${search}%` });
-      // Nếu dùng MySQL thì đổi ILIKE thành LIKE
+    }
+
+    // Sort
+    if (sort === "new") {
+      qb.orderBy("face.createdAt", "DESC");
+    } else if (sort === "hot") {
+      qb.orderBy("face.views", "DESC");
+    } else {
+      qb.orderBy("face.createdAt", order); // fallback
     }
 
     const [entities, total] = await qb.getManyAndCount();
 
     const result = new PageDto(
-      entities,
+      entities, // FaceEntity đã có cột `views`, nên data trả ra sẽ có luôn
       new PageMetaDto({ itemCount: total, pageOptionsDto }),
     );
 
-    // 2. Lưu cache (TTL = 10 phút)
+    if (search) {
+      return result;
+    }
+    // cache 1h
     await this.cacheService.setCache(cacheKey, result, 3600);
-
     return result;
   }
+
 
 
   async findOne(id: string): Promise<FaceEntity> {
@@ -220,6 +199,7 @@ export class FaceService {
     });
 
     const newQrCode = await this.faceRepo.save(qrCodeFace);
+    await this.cacheService.delByPrefixScan(this.CACHE_KEY);
 
     // return plainToInstance(DataFaceDto, newQrCode, {
     //   excludeExtraneousValues: true,
@@ -333,6 +313,7 @@ export class FaceService {
     }
 
     const updated = await this.faceRepo.save(qrCodeFace);
+    await this.cacheService.delByPrefixScan(this.CACHE_KEY);
 
     // return plainToInstance(DataFaceDto, updated, {
     //   excludeExtraneousValues: true,
@@ -362,6 +343,8 @@ export class FaceService {
     }
 
     await this.faceRepo.remove(face);
+    await this.cacheService.delByPrefixScan(this.CACHE_KEY);
+
     return { message: 'Delete success' };
   }
 

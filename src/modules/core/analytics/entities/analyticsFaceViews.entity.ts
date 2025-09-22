@@ -14,7 +14,7 @@ export class AnalyticsFaceViewsEntity extends BaseEntity {
   @Column({ type: 'int', default: 0 })
   views: number;
 
-  @ManyToOne(() => FaceEntity, face => face.analyticsFaceViews)
+  @ManyToOne(() => FaceEntity, face => face.id)
   @JoinColumn({ name: 'face_id' })
   face: FaceEntity;
 }

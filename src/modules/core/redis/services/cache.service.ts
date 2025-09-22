@@ -6,6 +6,32 @@ import { Redis } from 'ioredis';
 export class RedisCacheService {
   constructor(@InjectRedis() private readonly redis: Redis) { }
 
+   /**
+   * Xóa tất cả key bắt đầu bằng prefix bằng SCAN (an toàn cho dataset lớn)
+   */
+  async delByPrefixScan(prefix: string) {
+    let cursor = '0';
+    const keysToDelete: string[] = [];
+
+    do {
+      // scan 100 keys 1 lần (có thể tùy chỉnh)
+      const [nextCursor, keys] = await this.redis.scan(cursor, 'MATCH', `${prefix}*`, 'COUNT', 100);
+      cursor = nextCursor;
+      if (keys.length) keysToDelete.push(...keys);
+    } while (cursor !== '0');
+
+    if (keysToDelete.length) {
+      // xóa tất cả key tìm được
+      await this.redis.del(...keysToDelete);
+    }
+  }
+
+    async delByPrefixDel(prefix: string) {
+    const keys = await this.redis.keys(`${prefix}*`);
+    if (keys.length) {
+      await this.redis.del(...keys);
+    }
+  }
 
   async getHashCount(key: string) {
     return await this.redis.hlen(key);

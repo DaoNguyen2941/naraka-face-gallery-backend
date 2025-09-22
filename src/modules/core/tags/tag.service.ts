@@ -70,7 +70,7 @@ export class TagService {
         });
 
         const newTag = await this.tagRepo.save(tag);
-
+        await this.cacheService.deleteCache(this.CACHE_KEY)
         return plainToInstance(DataTagDto, newTag, {
             excludeExtraneousValues: true,
         })
@@ -90,6 +90,7 @@ export class TagService {
         Object.assign(tag, data);
 
         const updated = await this.tagRepo.save(tag);
+        await this.cacheService.deleteCache(this.CACHE_KEY)
         return plainToInstance(DataTagDto, updated, {
             excludeExtraneousValues: true,
         });
@@ -98,7 +99,7 @@ export class TagService {
     async remove(id: string): Promise<any> {
         const character = await this.findOne(id);
         await this.tagRepo.remove(character);
-
+        await this.cacheService.deleteCache(this.CACHE_KEY)
         return {
             messenger: "delete success"
         }

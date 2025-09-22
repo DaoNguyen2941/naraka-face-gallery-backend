@@ -25,26 +25,24 @@ export class CharactersService {
 
     async findAll(query?: { search?: string }): Promise<DataCharacterDto[]> {
         const search = query?.search ?? '';
-        const cacheKey = search ? `${this.CACHE_KEY}:search:${search}` : this.CACHE_KEY;
-
+        const cacheKey = this.CACHE_KEY;
         const cached = await this.cacheService.getCache<DataCharacterDto[]>(cacheKey);
         if (cached) {
             return cached;
         }
-
         const where = search ? { name: ILike(`%${search}%`) } : {};
         const list = await this.characterRepo.find({
             where,
             order: { createdAt: 'DESC' },
         });
-
         const plainList = instanceToPlain(list) as object[];
         const result = plainToInstance(DataCharacterDto, plainList, {
             excludeExtraneousValues: true,
         });
-
-        await this.cacheService.setCache(cacheKey, result, 7200);
-
+        if (search) {
+            return result;
+        }
+        await this.cacheService.setCache(cacheKey, result);
         return result;
     }
 
@@ -70,6 +68,7 @@ export class CharactersService {
             slug: slug
         });
         const newCharacter = await this.characterRepo.save(character);
+        await this.cacheService.deleteCache(this.CACHE_KEY)
         return plainToInstance(DataCharacterDto, newCharacter, {
             excludeExtraneousValues: true,
         })
@@ -99,11 +98,11 @@ export class CharactersService {
         character.slug = slugify(newName, { lower: true });
         Object.assign(character, data);
         const updated = await this.characterRepo.save(character);
+        await this.cacheService.deleteCache(this.CACHE_KEY)
         return plainToInstance(DataCharacterDto, updated, {
             excludeExtraneousValues: true,
         });
     }
-
 
     async remove(id: string): Promise<any> {
         const character = await this.findOne(id);
@@ -111,7 +110,7 @@ export class CharactersService {
         if (character.avatar) {
             await this.storageService.deleteFile(character.avatar.key)
         }
-
+        await this.cacheService.deleteCache(this.CACHE_KEY)
         return {
             messenger: "delete success"
         }
