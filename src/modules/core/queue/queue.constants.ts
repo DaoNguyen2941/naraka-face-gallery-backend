@@ -8,3 +8,8 @@ export const JOB_FILE = {
     DELETE: 'delete-queue',
     DELETE_MANY:'deletes-queue'
 }
+
+export const JOB_ACTIVITY = {
+    NAME: 'activity-log-queue',
+    CREATE_LOG: 'create-activity-log-queue',
+}

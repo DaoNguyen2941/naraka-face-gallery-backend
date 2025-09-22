@@ -10,13 +10,16 @@ import {
     UseInterceptors,
     UploadedFile,
     ParseFilePipeBuilder,
-    HttpStatus
+    HttpStatus,
+    Request,
+    Req,
+    Ip,
 } from '@nestjs/common';
 import { CharactersService } from 'src/modules/core/characters/characters.service';
 import { CreateCharacterDto, DataCharacterDto, UpdateCharacterDto } from '../../core/characters/dtos';
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ParamsIdDto } from 'src/common/dtos/ParamsId.dto';
-
+import { CustomAdminInRequest } from '../dtos/customAdminInRequest.dto';
 
 @Controller('admin/characters')
 export class AdminCharactersController {
@@ -31,22 +34,37 @@ export class AdminCharactersController {
 
     @Post()
     @UseInterceptors(FileInterceptor('file'))
-    async create(@Body() data: CreateCharacterDto, @UploadedFile(
-        new ParseFilePipeBuilder()
-            .addFileTypeValidator({
-                fileType: 'image'
-            })
-            .addMaxSizeValidator({ maxSize: 5_000_000 })
-            .build({
-                errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
-            }),
-    ) file: Express.Multer.File,): Promise<DataCharacterDto> {
-        return await this.charactersService.create(data, file);
+    async create(
+        @Body() data: CreateCharacterDto, @UploadedFile(
+            new ParseFilePipeBuilder()
+                .addFileTypeValidator({
+                    fileType: 'image'
+                })
+                .addMaxSizeValidator({ maxSize: 10_000_000 })
+                .build({
+                    errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
+                }),
+        ) file: Express.Multer.File,
+        @Request() request: CustomAdminInRequest,
+        @Req() req: Request,
+        @Ip() ip: string,
+    ): Promise<DataCharacterDto> {
+        const admin = request.user;
+        console.log(admin);
+
+        return await this.charactersService.create(data, file, {
+            adminId: admin.id,
+            ipAddress: ip,
+            userAgent: req.headers['user-agent'],
+        });
     }
 
     @Put(':id')
     @UseInterceptors(FileInterceptor('avatar'))
     update(
+        @Request() request: CustomAdminInRequest,
+        @Req() req: Request,
+        @Ip() ip: string,
         @Param() params: ParamsIdDto,
         @Body() data: UpdateCharacterDto,
         @UploadedFile(
@@ -59,9 +77,16 @@ export class AdminCharactersController {
                 }),
         )
         avatar?: Express.Multer.File,
+
     ): Promise<DataCharacterDto> {
         const { id } = params
-        return this.charactersService.update(id, data, avatar);
+        const admin = request.user;
+        const context = {
+            adminId: admin.id,
+            ipAddress: ip,
+            userAgent: req.headers['user-agent'],
+        }
+        return this.charactersService.update(id, data,context, avatar);
     }
 
     @Delete(':id')

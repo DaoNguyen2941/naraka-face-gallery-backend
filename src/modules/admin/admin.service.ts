@@ -14,7 +14,6 @@ export class AdminService {
   constructor(
     @InjectRepository(AdminEntity)
     private AdminRepository: Repository<AdminEntity>,
-    private jwtService: JwtService,
   ) { }
 
   async getAdminByUserName(userName: string): Promise<BasicAdminDataDto> {

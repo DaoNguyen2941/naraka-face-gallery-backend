@@ -1,20 +1,14 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  ManyToOne,
-  JoinColumn,
 } from 'typeorm';
 import { BaseEntity } from 'src/common/entities/base.entity';
-import { AdminEntity } from 'src/modules/admin/entitys/admin.entity';
 
 @Entity('activity_logs')
 export class ActivityLogEntity extends BaseEntity {
 
-  @ManyToOne(() => AdminEntity, { nullable: false })
-  @JoinColumn({ name: 'admin_id' })
-  admin: AdminEntity;
+  @Column({ name: 'admin_id' })
+  adminId: string;
 
   @Column({ type: 'varchar', length: 100 })
   module: string; 

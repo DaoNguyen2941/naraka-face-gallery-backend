@@ -11,6 +11,10 @@ import slugify from 'slugify';
 import { plainToInstance, instanceToPlain } from 'class-transformer';
 import { FileUsage } from '../object-storage/enums/file-usage.enum';
 import { RedisCacheService } from '../redis/services/cache.service';
+import { ActivityQueueService } from '../queue/service/activityQueue.service';
+import { ActivityAction, ActivityModule } from '../activityLogs/enums';
+import { pick } from 'lodash';
+
 @Injectable()
 export class CharactersService {
     private readonly CACHE_KEY = 'characters';
@@ -19,7 +23,8 @@ export class CharactersService {
         @InjectRepository(CharacterEntity)
         private readonly characterRepo: Repository<CharacterEntity>,
         private readonly storageService: StorageService,
-        private readonly cacheService: RedisCacheService
+        private readonly cacheService: RedisCacheService,
+        private readonly activityQueueService: ActivityQueueService,
 
     ) { }
 
@@ -54,7 +59,11 @@ export class CharactersService {
         return character;
     }
 
-    async create(data: CreateCharacterDto, file: Express.Multer.File): Promise<DataCharacterDto> {
+    async create(
+        data: CreateCharacterDto,
+        file: Express.Multer.File,
+        context: { adminId: string; ipAddress?: string; userAgent?: string },
+    ): Promise<DataCharacterDto> {
         const existing = await this.characterRepo.findOne({ where: { name: data.name } });
         if (existing) {
             throw new ConflictException(`Nhân vật ${data.name} đã tồn tại`);
@@ -68,6 +77,16 @@ export class CharactersService {
             slug: slug
         });
         const newCharacter = await this.characterRepo.save(character);
+
+        await this.activityQueueService.enqueueCreateLog({
+            adminId: context.adminId,
+            module: ActivityModule.CHARACTER,
+            action: ActivityAction.CREATE,
+            description: `Tạo mới nhân vật ${newCharacter.name}`,
+            metadata: { after: newCharacter },
+            ipAddress: context.ipAddress,
+            userAgent: context.userAgent,
+        });
         await this.cacheService.deleteCache(this.CACHE_KEY)
         return plainToInstance(DataCharacterDto, newCharacter, {
             excludeExtraneousValues: true,
@@ -77,11 +96,18 @@ export class CharactersService {
     async update(
         id: string,
         data: UpdateCharacterDto,
+        context: { adminId: string; ipAddress?: string; userAgent?: string },
         file?: Express.Multer.File,
     ): Promise<DataCharacterDto> {
-        const character = await this.findOne(id);
-        const newName = data.name || character.name;
+        // 1️⃣ Lấy nhân vật và clone dữ liệu trước khi thay đổi
+        const character = await this.characterRepo.findOne({ where: { id } });
+        if (!character) {
+            throw new ConflictException(`Nhân vật với id ${id} không tồn tại`);
+        }
+        const beforeUpdate = { ...character }; // shallow clone, đủ cho log
 
+        // 2️⃣ Kiểm tra trùng tên
+        const newName = data.name || character.name;
         if (data.name && data.name !== character.name) {
             const existing = await this.characterRepo.findOne({ where: { name: data.name } });
             if (existing && existing.id !== id) {
@@ -89,22 +115,45 @@ export class CharactersService {
             }
         }
 
+        // 3️⃣ Upload avatar nếu có
         if (file) {
             const slug = slugify(newName, { lower: true });
             const key = generateCharacterAvatarKey(slug, file.originalname);
-            const avatar = await this.storageService.uploadImage(file, key, FileUsage.COVER_PHOTO_CATEGORY);
+            const avatar = await this.storageService.uploadImage(file, key, FileUsage.CHARACTER_AVATAR);
             character.avatar = avatar;
         }
+
+        // 4️⃣ Cập nhật slug và các field khác
         character.slug = slugify(newName, { lower: true });
         Object.assign(character, data);
+
+        // 5️⃣ Lưu vào DB
         const updated = await this.characterRepo.save(character);
-        await this.cacheService.deleteCache(this.CACHE_KEY)
-        return plainToInstance(DataCharacterDto, updated, {
-            excludeExtraneousValues: true,
+
+        // 6️⃣ Gửi log vào queue
+        await this.activityQueueService.enqueueCreateLog({
+            adminId: context.adminId,
+            module: ActivityModule.CHARACTER,
+            action: ActivityAction.UPDATE,
+            description: `Update nhân vật ${updated.name}`,
+            metadata: {
+                before: pick(beforeUpdate, ['id', 'name', 'slug', 'avatar']),
+                after: pick(updated, ['id', 'name', 'slug', 'avatar']),
+            },
+            ipAddress: context?.ipAddress,
+            userAgent: context?.userAgent,
         });
+
+        // 7️⃣ Xóa cache
+        await this.cacheService.deleteCache(this.CACHE_KEY);
+
+        // 8️⃣ Trả về DTO
+        return plainToInstance(DataCharacterDto, updated, { excludeExtraneousValues: true });
     }
 
-    async remove(id: string, soft = true): Promise<{ message: string }> {
+    async remove(id: string, soft = true,
+        context: { adminId: string; ipAddress?: string; userAgent?: string },
+    ): Promise<{ message: string }> {
         const character = await this.findOne(id);
         if (soft) {
             await this.characterRepo.softDelete(id);
@@ -114,6 +163,20 @@ export class CharactersService {
                 await this.storageService.deleteFile(character.avatar.key);
             }
         }
+        await this.activityQueueService.enqueueCreateLog({
+            adminId: context.adminId,
+            module: ActivityModule.CHARACTER,
+            action: ActivityAction.DELETE,
+            description: `Xóa nhân vật ${character.name}`,
+            metadata: {
+                before: character,
+                after: {
+                    softDelete: character.deletedAt
+                }
+            },
+            ipAddress: context?.ipAddress,
+            userAgent: context?.userAgent,
+        });
         await this.cacheService.deleteCache(this.CACHE_KEY);
         return { message: soft ? 'Soft delete success' : 'Hard delete success' };
     }
