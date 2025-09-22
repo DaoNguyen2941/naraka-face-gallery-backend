@@ -115,8 +115,6 @@ export class StorageService {
 
   async deleteFile(key: string): Promise<void> {
     try {
-      console.log(key);
-
       const bucketName = this.configService.get('cfR2.bucketName');
       // 1. Xóa trên R2
       await this.s3.send(

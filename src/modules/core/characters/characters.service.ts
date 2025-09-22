@@ -104,15 +104,18 @@ export class CharactersService {
         });
     }
 
-    async remove(id: string): Promise<any> {
+    async remove(id: string, soft = true): Promise<{ message: string }> {
         const character = await this.findOne(id);
-        await this.characterRepo.remove(character);
-        if (character.avatar) {
-            await this.storageService.deleteFile(character.avatar.key)
+        if (soft) {
+            await this.characterRepo.softDelete(id);
+        } else {
+            await this.characterRepo.remove(character);
+            if (character.avatar) {
+                await this.storageService.deleteFile(character.avatar.key);
+            }
         }
-        await this.cacheService.deleteCache(this.CACHE_KEY)
-        return {
-            messenger: "delete success"
-        }
+        await this.cacheService.deleteCache(this.CACHE_KEY);
+        return { message: soft ? 'Soft delete success' : 'Hard delete success' };
     }
+
 }

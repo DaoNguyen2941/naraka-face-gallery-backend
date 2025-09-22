@@ -323,15 +323,20 @@ export class FaceService {
   }
 
 
-  async remove(id: string) {
-    const face = await this.faceRepo.findOne({
-      where: { id },
-      relations: ['imageReviews', 'qrCodeCN', 'qrCodeGlobals'],
-    });
+  async remove(id: string, soft = true) {
+  const face = await this.faceRepo.findOne({
+    where: { id },
+    relations: ['imageReviews', 'qrCodeCN', 'qrCodeGlobals'],
+    withDeleted: true,
+  });
 
-    if (!face) throw new NotFoundException('Face not found');
+  if (!face) throw new NotFoundException('Face not found');
 
-    // enqueue jobs
+  if (soft) {
+    // Xóa mềm: chỉ đánh dấu deletedAt
+    await this.faceRepo.softDelete(id);
+  } else {
+    // Xóa cứng: enqueue xóa file + remove record
     if (face.imageReviews?.length) {
       await this.fileQueueService.enqueueDeleteMany(face.imageReviews);
     }
@@ -343,10 +348,10 @@ export class FaceService {
     }
 
     await this.faceRepo.remove(face);
-    await this.cacheService.delByPrefixScan(this.CACHE_KEY);
-
-    return { message: 'Delete success' };
   }
 
+  await this.cacheService.delByPrefixScan(this.CACHE_KEY);
+  return { message: soft ? 'Soft delete success' : 'Hard delete success' };
+}
 
 }

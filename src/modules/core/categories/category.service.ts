@@ -89,15 +89,19 @@ export class CategoryService {
         });
     }
 
-    async remove(id: string): Promise<any> {
+    async remove(id: string, soft = true): Promise<{ message: string }> {
         const category = await this.findOne(id);
-        await this.CategoryRepo.remove(category);
-        if (category.cover_photo) {
-            await this.storageService.deleteFile(category.cover_photo.key)
+
+        if (soft) {
+            await this.CategoryRepo.softDelete(id);
+        } else {
+            await this.CategoryRepo.remove(category);
+            if (category.cover_photo) {
+                await this.storageService.deleteFile(category.cover_photo.key);
+            }
         }
-        return {
-            messenger: "delete success"
-        }
+        return { message: soft ? 'Soft delete success' : 'Hard delete success' };
     }
+
 
 }

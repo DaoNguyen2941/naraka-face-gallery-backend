@@ -96,13 +96,16 @@ export class TagService {
         });
     }
 
-    async remove(id: string): Promise<any> {
-        const character = await this.findOne(id);
-        await this.tagRepo.remove(character);
-        await this.cacheService.deleteCache(this.CACHE_KEY)
-        return {
-            messenger: "delete success"
+    async remove(id: string, soft = true): Promise<{ message: string }> {
+        const tag = await this.findOne(id);
+        if (soft) {
+            await this.tagRepo.softDelete(id);
+        } else {
+            await this.tagRepo.remove(tag);
         }
+        await this.cacheService.deleteCache(this.CACHE_KEY);
+        return { message: soft ? 'Soft delete success' : 'Hard delete success' };
     }
+
 
 }
