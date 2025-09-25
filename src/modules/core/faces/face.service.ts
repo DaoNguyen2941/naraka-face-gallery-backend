@@ -13,6 +13,10 @@ import { CategoryService } from '../categories/category.service';
 import { FileQueueService } from '../queue/service/fileQueue.service';
 import { PageDto, PageMetaDto } from 'src/common/dtos';
 import { RedisCacheService } from '../redis/services/cache.service';
+import { ContextLogDto } from '../activityLogs/dtos/context.dto';
+import { ActivityQueueService } from '../queue/service/activityQueue.service';
+import { ActivityAction, ActivityModule } from '../activityLogs/enums';
+import { pick } from 'lodash';
 
 @Injectable()
 export class FaceService {
@@ -26,7 +30,9 @@ export class FaceService {
     private readonly categoryService: CategoryService,
     private readonly storageService: StorageService,
     private readonly fileQueueService: FileQueueService,
-    private readonly cacheService: RedisCacheService
+    private readonly cacheService: RedisCacheService,
+    private readonly activityQueueService: ActivityQueueService,
+
   ) { }
 
   async addViews(id: string, views: number) {
@@ -134,6 +140,7 @@ export class FaceService {
 
   async create(
     data: CreateFaceDto,
+    context: ContextLogDto,
     fileImageReviews: Express.Multer.File[] = [],
     fileQrCodeGlobals?: Express.Multer.File,
     fileQrCodeCN?: Express.Multer.File,
@@ -195,18 +202,31 @@ export class FaceService {
       qrCodeGlobals,
       qrCodeCN,
       imageReviews,
-      source
+      source,
+      createdBy: context.adminId
     });
 
     const newQrCode = await this.faceRepo.save(qrCodeFace);
+    await this.activityQueueService.enqueueCreateLog({
+      adminId: context.adminId,
+      module: ActivityModule.FACE,
+      action: ActivityAction.CREATE,
+      description: `Tạo mới face-qr ${newQrCode.title}`,
+      metadata: { after: newQrCode },
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+    });
     await this.cacheService.delByPrefixScan(this.CACHE_KEY);
-
     // return plainToInstance(DataFaceDto, newQrCode, {
     //   excludeExtraneousValues: true,
     // });
     return newQrCode
   }
-  async update(id: string, data: UpdateFaceDto, files: GroupFile)
+  async update(
+    id: string,
+    data: UpdateFaceDto,
+    files: GroupFile,
+    context: ContextLogDto,)
     : Promise<FaceEntity> {
     const {
       characterId,
@@ -229,7 +249,7 @@ export class FaceService {
         ? this.faceRepo.findOne({ where: { title } })
         : false
     ])
-
+    const beforeUpdate = { ...qrCodeFace }
     if (existing) {
       throw new ConflictException(`QR Code với tiêu đề "${title}" đã tồn tại. Hãy đặt tiêu đề khác!`);
     }
@@ -312,7 +332,20 @@ export class FaceService {
       qrCodeFace.imageReviews = imageReviews;
     }
 
+    qrCodeFace.updatedBy = context.adminId
+
     const updated = await this.faceRepo.save(qrCodeFace);
+    await this.activityQueueService.enqueueCreateLog({
+      adminId: context.adminId,
+      module: ActivityModule.FACE,
+      action: ActivityAction.UPDATE,
+      description: `Update face-qr ${updated.title}`,
+      metadata: {
+        before: pick(beforeUpdate, ['id', 'title', 'slug', 'qrCodeCN', 'qrCodeGlobals', 'imageReviews', 'source', 'description', 'tagIds']),
+        after: pick(updated, ['id', 'title', 'slug', 'qrCodeCN', 'qrCodeGlobals', 'imageReviews', 'source', 'description', 'tagIds']),
+      }, ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+    });
     await this.cacheService.delByPrefixScan(this.CACHE_KEY);
 
     // return plainToInstance(DataFaceDto, updated, {
@@ -323,35 +356,50 @@ export class FaceService {
   }
 
 
-  async remove(id: string, soft = true) {
-  const face = await this.faceRepo.findOne({
-    where: { id },
-    relations: ['imageReviews', 'qrCodeCN', 'qrCodeGlobals'],
-    withDeleted: true,
-  });
+  async remove(id: string,
+    context: ContextLogDto,
+    soft = true) {
+    const face = await this.faceRepo.findOne({
+      where: { id },
+      relations: ['imageReviews', 'qrCodeCN', 'qrCodeGlobals'],
+      withDeleted: true,
+    });
 
-  if (!face) throw new NotFoundException('Face not found');
+    if (!face) throw new NotFoundException('Face not found');
 
-  if (soft) {
-    // Xóa mềm: chỉ đánh dấu deletedAt
-    await this.faceRepo.softDelete(id);
-  } else {
-    // Xóa cứng: enqueue xóa file + remove record
-    if (face.imageReviews?.length) {
-      await this.fileQueueService.enqueueDeleteMany(face.imageReviews);
-    }
-    if (face.qrCodeCN) {
-      await this.fileQueueService.enqueueDelete(face.qrCodeCN);
-    }
-    if (face.qrCodeGlobals) {
-      await this.fileQueueService.enqueueDelete(face.qrCodeGlobals);
-    }
+    if (soft) {
+      // Xóa mềm: chỉ đánh dấu deletedAt
+      await this.faceRepo.softDelete(id);
+    } else {
+      // Xóa cứng: enqueue xóa file + remove record
+      if (face.imageReviews?.length) {
+        await this.fileQueueService.enqueueDeleteMany(face.imageReviews);
+      }
+      if (face.qrCodeCN) {
+        await this.fileQueueService.enqueueDelete(face.qrCodeCN);
+      }
+      if (face.qrCodeGlobals) {
+        await this.fileQueueService.enqueueDelete(face.qrCodeGlobals);
+      }
 
-    await this.faceRepo.remove(face);
+      await this.faceRepo.remove(face);
+    }
+    await this.activityQueueService.enqueueCreateLog({
+      adminId: context.adminId,
+      module: ActivityModule.CHARACTER,
+      action: ActivityAction.DELETE,
+      description: soft ? `Xóa mềm face-qr ${face.title}` : `Xóa sạch face-qr ${face.title}`,
+      metadata: {
+        before: face,
+        after: {
+          softDelete: face.deletedAt
+        }
+      },
+      ipAddress: context?.ipAddress,
+      userAgent: context?.userAgent,
+    });
+    await this.cacheService.delByPrefixScan(this.CACHE_KEY);
+    return { message: soft ? 'Soft delete success' : 'Hard delete success' };
   }
-
-  await this.cacheService.delByPrefixScan(this.CACHE_KEY);
-  return { message: soft ? 'Soft delete success' : 'Hard delete success' };
-}
 
 }

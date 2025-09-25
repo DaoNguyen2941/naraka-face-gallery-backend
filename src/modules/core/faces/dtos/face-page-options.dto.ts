@@ -1,5 +1,4 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { Type } from "class-transformer";
 import { IsArray, IsOptional, IsString, IsIn } from "class-validator";
 import { PageOptionsDto } from "src/common/dtos";
 import { Transform } from 'class-transformer';

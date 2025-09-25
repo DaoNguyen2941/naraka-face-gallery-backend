@@ -80,13 +80,14 @@ export class StorageService {
         key ||
         `images/${new Date().toISOString().split('T')[0]}/${uuidv4()}-${cleanName}`;
 
-      const upload = await this.s3.send(
+       await this.s3.send(
         new PutObjectCommand({
           Bucket: bucketName,
           Key: finalKey,
           Body: file.buffer,
           ContentType: file.mimetype,
           ContentDisposition: `inline; filename="${cleanName}"`,
+          CacheControl: 'no-cache, no-store, must-revalidate'
         }),
       );
 
@@ -106,7 +107,6 @@ export class StorageService {
 
       const savedFile = await this.filesRepository.save(dataFile);
       return savedFile;
-
     } catch (error) {
       console.error('Upload image failed:', error);
       throw new InternalServerErrorException('Failed to upload image');

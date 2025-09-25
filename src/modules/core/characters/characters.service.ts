@@ -14,7 +14,7 @@ import { RedisCacheService } from '../redis/services/cache.service';
 import { ActivityQueueService } from '../queue/service/activityQueue.service';
 import { ActivityAction, ActivityModule } from '../activityLogs/enums';
 import { pick } from 'lodash';
-
+import { ContextLogDto } from '../activityLogs/dtos/context.dto';
 @Injectable()
 export class CharactersService {
     private readonly CACHE_KEY = 'characters';
@@ -62,7 +62,7 @@ export class CharactersService {
     async create(
         data: CreateCharacterDto,
         file: Express.Multer.File,
-        context: { adminId: string; ipAddress?: string; userAgent?: string },
+        context: ContextLogDto,
     ): Promise<DataCharacterDto> {
         const existing = await this.characterRepo.findOne({ where: { name: data.name } });
         if (existing) {
@@ -74,7 +74,8 @@ export class CharactersService {
         const character = this.characterRepo.create({
             ...data,
             avatar: fileUpload,
-            slug: slug
+            slug: slug,
+            createdBy: context.adminId
         });
         const newCharacter = await this.characterRepo.save(character);
 
@@ -96,7 +97,7 @@ export class CharactersService {
     async update(
         id: string,
         data: UpdateCharacterDto,
-        context: { adminId: string; ipAddress?: string; userAgent?: string },
+        context: ContextLogDto,
         file?: Express.Multer.File,
     ): Promise<DataCharacterDto> {
         // 1️⃣ Lấy nhân vật và clone dữ liệu trước khi thay đổi
@@ -126,6 +127,7 @@ export class CharactersService {
         // 4️⃣ Cập nhật slug và các field khác
         character.slug = slugify(newName, { lower: true });
         Object.assign(character, data);
+        character.updatedBy = context.adminId
 
         // 5️⃣ Lưu vào DB
         const updated = await this.characterRepo.save(character);
@@ -151,8 +153,9 @@ export class CharactersService {
         return plainToInstance(DataCharacterDto, updated, { excludeExtraneousValues: true });
     }
 
-    async remove(id: string, soft = true,
-        context: { adminId: string; ipAddress?: string; userAgent?: string },
+    async remove(id: string,
+        context: ContextLogDto,
+        soft = true,
     ): Promise<{ message: string }> {
         const character = await this.findOne(id);
         if (soft) {
@@ -167,7 +170,7 @@ export class CharactersService {
             adminId: context.adminId,
             module: ActivityModule.CHARACTER,
             action: ActivityAction.DELETE,
-            description: `Xóa nhân vật ${character.name}`,
+            description: soft? `Xóa mềm nhân vật ${character.name}`: `Xóa sạch nhân vật ${character.name}`,
             metadata: {
                 before: character,
                 after: {

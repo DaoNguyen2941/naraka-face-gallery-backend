@@ -50,7 +50,6 @@ export class AdminCharactersController {
         @Ip() ip: string,
     ): Promise<DataCharacterDto> {
         const admin = request.user;
-        console.log(admin);
 
         return await this.charactersService.create(data, file, {
             adminId: admin.id,
@@ -86,13 +85,24 @@ export class AdminCharactersController {
             ipAddress: ip,
             userAgent: req.headers['user-agent'],
         }
-        return this.charactersService.update(id, data,context, avatar);
+        return this.charactersService.update(id, data, context, avatar);
     }
 
     @Delete(':id')
-    delete(@Param() params: ParamsIdDto,) {
+    delete(
+        @Param() params: ParamsIdDto,
+        @Request() request: CustomAdminInRequest,
+        @Req() req: Request,
+        @Ip() ip: string,
+    ) {
         const { id } = params
-        return this.charactersService.remove(id)
+        const admin = request.user;
+        const context = {
+            adminId: admin.id,
+            ipAddress: ip,
+            userAgent: req.headers['user-agent'],
+        }
+        return this.charactersService.remove(id,context)
     }
 
 }
