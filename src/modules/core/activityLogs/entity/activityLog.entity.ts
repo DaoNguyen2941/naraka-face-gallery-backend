@@ -10,8 +10,11 @@ export class ActivityLogEntity extends BaseEntity {
   @Column({ name: 'admin_id' })
   adminId: string;
 
+  @Column({ name: 'record_id' })
+  recordId: string;
+
   @Column({ type: 'varchar', length: 100 })
-  module: string; 
+  module: string;
   // Ví dụ: "character", "face", "hairstyle", "album", "tag", "auth"
 
   @Column({ type: 'varchar', length: 50 })

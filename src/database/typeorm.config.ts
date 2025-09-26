@@ -10,5 +10,5 @@ export const typeOrmConfig = (configService: ConfigService): TypeOrmModuleOption
   database: configService.get('DB_DATABASE'),
   autoLoadEntities: true,
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  synchronize: true, // ✅ Dùng dev thôi Prod nên false
+  synchronize: false, // ✅ Dùng dev thôi Prod nên false
 });
