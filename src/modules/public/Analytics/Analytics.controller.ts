@@ -13,10 +13,9 @@ export class PublicAnalyticsController {
     @SkipAuth()
     async trackFaceView(@Param() params: ParamsSlugDto) {
         const { slug } = params
-        const viewsCount = await this.analyticsService.trackFaceViewBySlug(slug);
+        await this.analyticsService.trackFaceViewBySlug(slug);
         return {
             success: true,
-            viewsCount
         };
     }
 
@@ -25,7 +24,6 @@ export class PublicAnalyticsController {
     async trackPageView(
         @Body() dto: CreatePageviewDto,
     ) {
-        console.log(dto);
         await this.analyticsService.trackPageViewByPath(dto)
         return {
             success: true,

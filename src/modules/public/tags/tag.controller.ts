@@ -1,26 +1,12 @@
 import {
     Controller,
     Get,
-    Post,
-    Put,
-    Patch,
-    Delete,
-    Param,
-    Body,
-    UseInterceptors,
-    UploadedFile,
-    UploadedFiles,
-    ParseFilePipeBuilder,
-    HttpStatus,
-    Query,
-    Res
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { SkipAuth } from 'src/common/decorate/skipAuth';
 import { PublicTagDto } from './dto/publicTag.dto';
-import { ParamsSlugDto } from 'src/common/dtos';
-import { Response } from 'express';
 import { TagService } from 'src/modules/core/tags/tag.service';
+import * as Sentry from "@sentry/nestjs"
 
 @Controller('tag')
 export class PublicTagController {
@@ -33,5 +19,15 @@ export class PublicTagController {
     async gets(): Promise<PublicTagDto> {
         const result = this.tagService.findAll()
         return plainToInstance(PublicTagDto, result, { excludeExtraneousValues: true })
+    }
+
+    @Get("/debug-sentry")
+    @SkipAuth()
+    getError() {
+        // Send a log before throwing the error
+        Sentry.logger.info('User triggered test error', {
+            action: 'test_error_endpoint',
+        });
+        throw new Error("My first Sentry error!");
     }
 }

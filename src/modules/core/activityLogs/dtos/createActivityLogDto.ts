@@ -1,11 +1,14 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ActivityAction, ActivityModule } from '../enums';
 
-
 export class CreateActivityLogDto {
   @IsUUID()
   @IsNotEmpty()
   adminId: string;
+
+  @IsUUID()
+  @IsNotEmpty()
+  recordId: string;
 
   @IsEnum(ActivityModule)
   module: ActivityModule;

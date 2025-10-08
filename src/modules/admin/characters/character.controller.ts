@@ -14,6 +14,7 @@ import {
     Request,
     Req,
     Ip,
+    UnprocessableEntityException,
 } from '@nestjs/common';
 import { CharactersService } from 'src/modules/core/characters/characters.service';
 import { CreateCharacterDto, DataCharacterDto, UpdateCharacterDto } from '../../core/characters/dtos';
@@ -40,9 +41,23 @@ export class AdminCharactersController {
                 .addFileTypeValidator({
                     fileType: 'image'
                 })
-                .addMaxSizeValidator({ maxSize: 10_000_000 })
-                .build({
-                    errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
+                .addMaxSizeValidator({ maxSize: 5_000_000 })
+               .build({
+                    errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+                    fileIsRequired: false,
+                    exceptionFactory: (errors) => {
+                        if (Array.isArray(errors)) {
+                            if (errors.some(e => e?.code === 'LIMIT_FILE_SIZE')) {
+                                return new UnprocessableEntityException('File quá lớn, tối đa 5MB')
+                            }
+                            if (errors.some(e => e?.code === 'INVALID_FILE_TYPE')) {
+                                return new UnprocessableEntityException('Chỉ được upload file ảnh')
+                            }
+                        }
+                        // Nếu errors là string hoặc không thỏa điều kiện trên
+                        const message = typeof errors === 'string' ? errors : 'File không hợp lệ'
+                        return new UnprocessableEntityException(message)
+                    }
                 }),
         ) file: Express.Multer.File,
         @Request() request: CustomAdminInRequest,
@@ -73,6 +88,19 @@ export class AdminCharactersController {
                 .build({
                     errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
                     fileIsRequired: false,
+                    exceptionFactory: (errors) => {
+                        if (Array.isArray(errors)) {
+                            if (errors.some(e => e?.code === 'LIMIT_FILE_SIZE')) {
+                                return new UnprocessableEntityException('File quá lớn, tối đa 5MB')
+                            }
+                            if (errors.some(e => e?.code === 'INVALID_FILE_TYPE')) {
+                                return new UnprocessableEntityException('Chỉ được upload file ảnh')
+                            }
+                        }
+                        // Nếu errors là string hoặc không thỏa điều kiện trên
+                        const message = typeof errors === 'string' ? errors : 'File không hợp lệ'
+                        return new UnprocessableEntityException(message)
+                    }
                 }),
         )
         avatar?: Express.Multer.File,
@@ -102,7 +130,7 @@ export class AdminCharactersController {
             ipAddress: ip,
             userAgent: req.headers['user-agent'],
         }
-        return this.charactersService.remove(id,context)
+        return this.charactersService.remove(id, context)
     }
 
 }

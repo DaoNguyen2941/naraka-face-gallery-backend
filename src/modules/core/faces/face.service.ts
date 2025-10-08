@@ -215,6 +215,8 @@ export class FaceService {
       metadata: { after: newQrCode },
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
+      recordId: newQrCode.id
+
     });
     await this.cacheService.delByPrefixScan(this.CACHE_KEY);
     // return plainToInstance(DataFaceDto, newQrCode, {
@@ -345,6 +347,8 @@ export class FaceService {
         after: pick(updated, ['id', 'title', 'slug', 'qrCodeCN', 'qrCodeGlobals', 'imageReviews', 'source', 'description', 'tagIds']),
       }, ipAddress: context.ipAddress,
       userAgent: context.userAgent,
+      recordId: qrCodeFace.id
+
     });
     await this.cacheService.delByPrefixScan(this.CACHE_KEY);
 
@@ -397,6 +401,7 @@ export class FaceService {
       },
       ipAddress: context?.ipAddress,
       userAgent: context?.userAgent,
+      recordId: face.id
     });
     await this.cacheService.delByPrefixScan(this.CACHE_KEY);
     return { message: soft ? 'Soft delete success' : 'Hard delete success' };

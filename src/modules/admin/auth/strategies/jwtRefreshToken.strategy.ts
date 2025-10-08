@@ -29,7 +29,6 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
   }
 
   async validate(request: Request, payload: JWTDecoded) {
-    console.log(payload);
     const refreshToken = request.cookies?.Refresh;
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');

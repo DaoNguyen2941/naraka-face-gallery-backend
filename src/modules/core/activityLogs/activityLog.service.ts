@@ -15,6 +15,8 @@ export class ActivityLogService {
 
   async logAction(dto: CreateActivityLogDto) {
     try {
+      console.log(dto);
+
       const timestamp = toVNTime();
       const slug = `${(dto.description)} / ${timestamp}`;
       const log = this.logRepo.create({
@@ -54,12 +56,14 @@ export class ActivityLogService {
     }
 
     if (toDate) {
-      qb.andWhere('log.createdAt <= :toDate', { toDate });
+      const nextDay = new Date(toDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      nextDay.setHours(0, 0, 0, 0);
+      qb.andWhere('log.createdAt < :nextDay', { nextDay });
     }
 
     const [data, itemCount] = await qb.getManyAndCount();
     const meta = new PageMetaDto({ pageOptionsDto: dto, itemCount });
-
     return new PageDto(data, meta);
   }
 

@@ -40,7 +40,7 @@ export class AuthService {
             username: adminData.username,
         };
         const token = this.jwtService.sign(payload);
-        const cookie = createCookie('Authentication', token, '/', jwtConstants.expirationTimeDefault)
+        const cookie = createCookie('Authentication', token, '/', jwtConstants.expirationTime)
         return {
             accessTokenCookie: cookie,
             token: token

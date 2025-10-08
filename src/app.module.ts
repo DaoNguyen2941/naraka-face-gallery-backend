@@ -10,9 +10,16 @@ import { QueueModule } from './modules/core/queue/queue.module';
 import { PublicModule } from './modules/public/public.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TasksModule } from './modules/core/tasks/task.module';
+import { SentryModule } from '@sentry/nestjs/setup';
+import { APP_FILTER } from '@nestjs/core';
+import { SentryGlobalFilter } from '@sentry/nestjs/setup';
+import { LoggerModule } from "./common/logger/logger.module";
+
 @Module({
   imports: [
+    SentryModule.forRoot(),
     UseConfigModule,
+    LoggerModule,
     DatabaseModule,
     PassportModule,
     QueueModule,
@@ -25,8 +32,13 @@ import { TasksModule } from './modules/core/tasks/task.module';
     CustomRedisModule,
     PublicModule,
     ScheduleModule.forRoot(),
-    TasksModule
+    TasksModule,
   ],
-  providers: []
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
+  ]
 })
 export class AppModule { }

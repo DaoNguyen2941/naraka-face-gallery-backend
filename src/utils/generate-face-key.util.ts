@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
+import slugify from "slugify";
 
 /**
  * Generate R2 key for a face image under a character and category.
@@ -54,7 +55,9 @@ export function generateCharacterAvatarKey(
   originalname: string,
 ): string {
   const ext = path.extname(originalname);
-  return `img/characters/${characterSlug}/avatar${ext}`;
+  const base = slugify(path.basename(originalname, ext));
+  const timestamp = Date.now();
+  return `img/characters/${characterSlug}/avatar-${base}-${timestamp}${ext}`;
 }
 
 export function generateCategoryKet(
@@ -62,5 +65,7 @@ export function generateCategoryKet(
   originalname: string,
 ): string {
   const ext = path.extname(originalname);
-  return `img/category/${categoryName}/cover-photo${ext}`;
+  const base = slugify(path.basename(originalname, ext));
+  const timestamp = Date.now();
+  return `img/category/${categoryName}/cover-photo-${base}-${timestamp}${ext}`;
 }

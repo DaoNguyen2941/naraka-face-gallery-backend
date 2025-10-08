@@ -23,7 +23,7 @@ export const UseConfigModule = ConfigModule.forRoot({
         JWT_REFRESH_TOKEN_SECRET: Joi.string().required(),
         JWT_RESET_PASSWORD: Joi.string().required(),
         JWT_REFRESH_TOKEN_EXPIRATION_TIME: Joi.number().required(),
-        JWT_EXPIRATION_TIME_DEAULT: Joi.number().required().default(900),
+        JWT_EXPIRATION_TIME_DEFAULT: Joi.number().required().default(900),
 
         CLOUDFLARE_ACCESS_KEY_ID: Joi.string().required(),
         CLOUDFLARE_SECRET_ACCESS_KEY: Joi.string().required(),

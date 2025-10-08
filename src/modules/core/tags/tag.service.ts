@@ -84,6 +84,8 @@ export class TagService {
             metadata: { after: newTag },
             ipAddress: context.ipAddress,
             userAgent: context.userAgent,
+            recordId: newTag.id
+
         });
         await this.cacheService.deleteCache(this.CACHE_KEY)
         return plainToInstance(DataTagDto, newTag, {
@@ -118,6 +120,8 @@ export class TagService {
             },
             ipAddress: context.ipAddress,
             userAgent: context.userAgent,
+            recordId: tag.id
+
         });
         await this.cacheService.deleteCache(this.CACHE_KEY)
         return plainToInstance(DataTagDto, updated, {
@@ -145,6 +149,7 @@ export class TagService {
             },
             ipAddress: context.ipAddress,
             userAgent: context.userAgent,
+            recordId: tag.id
         });
         await this.cacheService.deleteCache(this.CACHE_KEY);
         return { message: soft ? 'Soft delete success' : 'Hard delete success' };

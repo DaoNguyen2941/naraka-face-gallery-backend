@@ -26,6 +26,7 @@ export class StorageService {
   ) {
     this.bucketName = this.configService.get<string>('cfR2.bucketName')!;
     this.publicUrl = this.configService.get<string>('cfR2.publicUrl')!;
+    
   }
 
   async downloadFile(url: string, res: Response, filename?: string) {

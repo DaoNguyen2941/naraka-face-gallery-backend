@@ -15,11 +15,16 @@ import { RedisCacheService } from "../core/redis/services/cache.service";
 import { jwtConstants } from 'src/config/constants/jwt.constants';
 import JwtRefreshGuard from "./auth/guards/Jwt-Refresh.guard";
 import { hashData } from "src/utils/hashData";
+import { UpdatePasswordDto, AdminProfileDto } from "./dtos";
+import { AdminService } from "./admin.service";
+
 @Controller('admin')
 export class AdminController {
     constructor(
         private readonly authService: AuthService,
         private readonly cacheService: RedisCacheService,
+        private readonly adminService: AdminService,
+
     ) { }
 
     @SkipAuth()
@@ -49,5 +54,34 @@ export class AdminController {
         });
     }
 
+    @Post('/password/change')
+    async updatePassword(@Request() request: CustomAdminInRequest, @Body() data: UpdatePasswordDto) {
+        const { user } = request;
+        const { password, newPassword } = data
+        console.log(data);
+
+        await this.adminService.changeUserPassword(user.id, password, newPassword)
+        return ({
+            message: 'Password changed successfully',
+        });
+    }
+
+    @Get('/profile')
+    async getProfile(@Request() request: CustomAdminInRequest): Promise<AdminProfileDto> {
+        const { user } = request;
+        const data = await this.adminService.profile(user.id)
+        return data
+    }
+
+    @Post('/auth/logout')
+    logout(@Request() request: CustomAdminInRequest,) {
+        request.res.setHeader('Set-Cookie', [
+            `Authentication=; HttpOnly; Path=/; Max-Age=0`,
+            `Refresh=; HttpOnly; Path=/api/admin/auth/refresh; Max-Age=0`,
+        ]);
+        return {
+            message: 'Đang xuất thành công',
+        }
+    }
 
 }

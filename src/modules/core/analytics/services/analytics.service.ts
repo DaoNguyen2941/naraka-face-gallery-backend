@@ -12,29 +12,34 @@ export class AnalyticsService {
   async trackFaceViewBySlug(faceSlug: string) {
     const today = new Date().toISOString().slice(0, 10);
     const key = `${KEY_CACHE_ANALYTICS.FACE}:${today}:${faceSlug}`;
-    // const existing = await this.cacheService.exists(key)
-    // if (!existing) {
-    //   const faceView = await this.faceViewsService.getByFaceSlug(faceSlug)
-    //  await this.cacheService.setCache(key,faceView.views,86400)
-    // }
-    return await this.cacheService.incr(key, 86400);
+
+    this.cacheService.incr(key, 86400).catch(err => {
+      console.error('Redis incr face view failed:', err);
+    });
+
+    return { success: true };
   }
 
   async trackPageViewByPath(data: CreatePageviewDto) {
-    const { path, visitorId, sessionId, newVisitor } = data
+    const { path, visitorId, sessionId, newVisitor } = data;
     const today = new Date().toISOString().slice(0, 10);
-    const key = `${KEY_CACHE_ANALYTICS.PAGE}:${today}:${path}`;
-    await this.cacheService.incr(key);
-    // unique visitors
-    await this.cacheService.setHsetCache(`${KEY_CACHE_ANALYTICS.VISITOR}:${today}`, {
-      [visitorId]: 1,
-    });
-    // unique sessions
-    await this.cacheService.setHsetCache(`${KEY_CACHE_ANALYTICS.SESSION}:${today}`, {
-      [sessionId]: 1,
-    });
+
+    const tasks = [
+      this.cacheService.incr(`${KEY_CACHE_ANALYTICS.PAGE}:${today}:${path}`),
+      this.cacheService.setHsetCache(`${KEY_CACHE_ANALYTICS.VISITOR}:${today}`, { [visitorId]: 1 }),
+      this.cacheService.setHsetCache(`${KEY_CACHE_ANALYTICS.SESSION}:${today}`, { [sessionId]: 1 }),
+    ];
+
     if (newVisitor) {
-      await this.cacheService.incr(`${KEY_CACHE_ANALYTICS.NEW_VISITOR}:${today}`)
+      tasks.push(this.cacheService.incr(`${KEY_CACHE_ANALYTICS.NEW_VISITOR}:${today}`));
     }
+
+    // Chạy song song, log lỗi nếu có
+    Promise.all(tasks).catch(err => {
+      console.error('Redis trackPageView failed:', err);
+    });
+
+    // Trả về ngay cho client
+    return { success: true };
   }
 }

@@ -1,19 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression, Interval, Timeout } from '@nestjs/schedule';
+import { Injectable, LoggerService,Inject } from '@nestjs/common';
+import { Cron, CronExpression, } from '@nestjs/schedule';
 import { RedisCacheService } from '../redis/services/cache.service';
 import { FaceViewsService } from '../analytics/services/faceViews.service';
 import { KEY_CACHE_ANALYTICS } from '../analytics/constants';
 import { DailyStatisticsService, TrafficAnalysisService } from '../analytics/services';
 import { toVNTime } from 'src/utils/dayjs';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Injectable()
 export class TasksService {
-    private readonly logger = new Logger(TasksService.name);
     constructor(
         private readonly redisCache: RedisCacheService,
         private readonly faceViewsService: FaceViewsService,
         private readonly trafficService: TrafficAnalysisService,
         private readonly dailyStatisticsService: DailyStatisticsService,
+        @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService
     ) { }
 
     @Cron(CronExpression.EVERY_5_MINUTES, {

@@ -25,7 +25,6 @@ export class CharactersService {
         private readonly storageService: StorageService,
         private readonly cacheService: RedisCacheService,
         private readonly activityQueueService: ActivityQueueService,
-
     ) { }
 
     async findAll(query?: { search?: string }): Promise<DataCharacterDto[]> {
@@ -53,6 +52,14 @@ export class CharactersService {
 
     async findOne(id: string): Promise<CharacterEntity> {
         const character = await this.characterRepo.findOne({ where: { id } });
+        if (!character) {
+            throw new NotFoundException('Nhân vật không tồn tại');
+        }
+        return character;
+    }
+
+        async findBySlug(slug: string): Promise<CharacterEntity> {
+        const character = await this.characterRepo.findOne({ where: { slug } });
         if (!character) {
             throw new NotFoundException('Nhân vật không tồn tại');
         }
@@ -87,6 +94,8 @@ export class CharactersService {
             metadata: { after: newCharacter },
             ipAddress: context.ipAddress,
             userAgent: context.userAgent,
+            recordId: newCharacter.id
+
         });
         await this.cacheService.deleteCache(this.CACHE_KEY)
         return plainToInstance(DataCharacterDto, newCharacter, {
@@ -144,6 +153,8 @@ export class CharactersService {
             },
             ipAddress: context?.ipAddress,
             userAgent: context?.userAgent,
+            recordId: character.id
+
         });
 
         // 7️⃣ Xóa cache
@@ -170,7 +181,7 @@ export class CharactersService {
             adminId: context.adminId,
             module: ActivityModule.CHARACTER,
             action: ActivityAction.DELETE,
-            description: soft? `Xóa mềm nhân vật ${character.name}`: `Xóa sạch nhân vật ${character.name}`,
+            description: soft ? `Xóa mềm nhân vật ${character.name}` : `Xóa sạch nhân vật ${character.name}`,
             metadata: {
                 before: character,
                 after: {
@@ -179,6 +190,7 @@ export class CharactersService {
             },
             ipAddress: context?.ipAddress,
             userAgent: context?.userAgent,
+            recordId: character.id
         });
         await this.cacheService.deleteCache(this.CACHE_KEY);
         return { message: soft ? 'Soft delete success' : 'Hard delete success' };

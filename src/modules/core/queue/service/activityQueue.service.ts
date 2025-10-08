@@ -13,6 +13,8 @@ export class ActivityQueueService {
     ) { }
 
   async enqueueCreateLog(data: CreateActivityLogDto) {
+    console.log(data);
+    
     await validateOrReject(Object.assign(new CreateActivityLogDto(), data));
     await this.activityLogQueue.add(JOB_ACTIVITY.CREATE_LOG, data, {
       removeOnComplete: true,
