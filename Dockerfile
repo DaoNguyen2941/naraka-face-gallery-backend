@@ -35,8 +35,8 @@ RUN npm ci --only=production
 COPY --from=builder /app/dist ./dist
 
 # Copy script entrypoint + wait-for-it
-COPY ./docker/backend/entrypoint.sh /entrypoint.sh
-COPY ./docker/backend/wait-for-it.sh /wait-for-it.sh
+COPY ./entrypoint.sh /entrypoint.sh
+COPY ./wait-for-it.sh /wait-for-it.sh
 RUN chmod +x /entrypoint.sh /wait-for-it.sh
 
 # Expose cổng NestJS

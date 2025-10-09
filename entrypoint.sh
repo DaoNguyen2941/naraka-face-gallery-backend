@@ -20,7 +20,7 @@ echo "[entrypoint] Loading Docker secrets..."
 
 # Sentry + Entry Auth
 [ -f /run/secrets/sentry_dsn ] && export SENTRY_DSN="$(cat /run/secrets/sentry_dsn)"
-[ -f /run/secrets/entry_auth_token ] && export ENTRY_AUTH_TOKEN="$(cat /run/secrets/entry_auth_token)"
+[ -f /run/secrets/sentry_auth_token ] && export SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"
 
 # Chờ MySQL (nếu cần)
 if [ -n "$DB_HOST" ] && [ -n "$DB_PORT" ]; then

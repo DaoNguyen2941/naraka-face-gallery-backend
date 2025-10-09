@@ -37,8 +37,12 @@ export const UseConfigModule = ConfigModule.forRoot({
         REDIS_DB: Joi.string(),
 
         SENTRY_DSN: Joi.string(),
-        ENTRY_AUTH_TOKEN: Joi.string(),
+        SENTRY_AUTH_TOKEN: Joi.string(),
+        SENTRY_ORG: Joi.string(),
+        SENTRY_PROJECT: Joi.string(),
+        
         NODE_ENV: Joi.string(),
+
     })
 
 })
