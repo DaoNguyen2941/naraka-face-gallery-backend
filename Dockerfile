@@ -3,15 +3,15 @@
 # ==============================
 FROM node:20-alpine AS builder
 
-# Cài đặt các gói cần thiết để build (đặc biệt để build bcrypt, Sentry CLI, v.v.)
+# Cài đặt công cụ cần thiết để build (cho bcrypt, Sentry CLI, v.v.)
 RUN apk add --no-cache python3 make g++ bash
 
 WORKDIR /app
 
-# Copy package.json và package-lock.json để tận dụng cache layer
+# Copy package.json và package-lock.json để tận dụng cache
 COPY package*.json ./
 
-# Cài đặt dependencies (bao gồm dev để build)
+# Cài đặt tất cả dependencies (bao gồm dev)
 RUN npm ci
 
 # Copy toàn bộ source code
@@ -20,10 +20,6 @@ COPY . .
 # Build project NestJS -> dist/
 RUN npm run build
 
-# Inject & upload sourcemaps (tùy bạn bật/tắt khi deploy thực tế)
-# Nếu bạn chưa cấu hình Sentry token trong môi trường build thì nên tạm disable dòng dưới:
-# RUN npm run sentry:sourcemaps || true
-
 # ==============================
 # Stage 2: Production image
 # ==============================
@@ -31,23 +27,23 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package.json để cài dependencies production
+# Cài gói cần thiết cho môi trường production
 COPY package*.json ./
-
-# Cài đặt production dependencies
 RUN npm ci --only=production
 
-# Copy dist và các file cần thiết từ builder
+# Copy build output từ stage builder
 COPY --from=builder /app/dist ./dist
 
-# Nếu có file cấu hình khác (ví dụ .env.example, ormconfig.js, src/data-source.ts, v.v.)
-# COPY --from=builder /app/src/data-source.ts ./src/data-source.ts
+# Copy script entrypoint + wait-for-it
+COPY ./docker/backend/entrypoint.sh /entrypoint.sh
+COPY ./docker/backend/wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /entrypoint.sh /wait-for-it.sh
 
-# Expose cổng NestJS chạy
-EXPOSE 3000
+# Expose cổng NestJS
+EXPOSE 3001
 
 # Environment mặc định
 ENV NODE_ENV=production
 
-# Lệnh chạy chính
-CMD ["node", "dist/main.js"]
+# Lệnh khởi chạy chính
+ENTRYPOINT ["/entrypoint.sh"]

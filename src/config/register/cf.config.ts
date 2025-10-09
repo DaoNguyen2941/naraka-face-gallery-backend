@@ -1,9 +1,10 @@
 import { registerAs } from "@nestjs/config";
+import { readSecret } from '../readSecret';
 
 export default registerAs('cfR2', () => ({
   bucketName: process.env.CLOUDFLARE_R2_BUCKET_NAME,
   accessId: process.env.CLOUDFLARE_ACCESS_KEY_ID,
-  secretKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY,
+  secretKey: readSecret('cf_secret_access_key', process.env.CLOUDFLARE_SECRET_ACCESS_KEY),
   accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
   publicUrl: process.env.R2_PUBLIC_URL,
   endpoint: process.env.ENDPOINT
