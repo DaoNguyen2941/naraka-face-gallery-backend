@@ -1,8 +1,7 @@
-// Import with `const Sentry = require("@sentry/nestjs");` if you are using CJS
 import * as Sentry from "@sentry/nestjs"
 
 Sentry.init({
-    dsn: "https://78ee51b39bd8e76193ca4b5daf9b35a9@o4510145388347392.ingest.us.sentry.io/4510145423671296",
+    dsn: process.env.SENTRY_DSN,
 
     // Send structured logs to Sentry
     enableLogs: true,

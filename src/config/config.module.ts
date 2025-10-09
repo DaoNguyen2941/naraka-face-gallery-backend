@@ -35,6 +35,10 @@ export const UseConfigModule = ConfigModule.forRoot({
         REDIS_HOST: Joi.string().required(),
         REDIS_PORT: Joi.number().required().default(6379),
         REDIS_DB: Joi.string(),
+
+        SENTRY_DSN: Joi.string(),
+        ENTRY_AUTH_TOKEN: Joi.string(),
+        NODE_ENV: Joi.string(),
     })
 
 })
