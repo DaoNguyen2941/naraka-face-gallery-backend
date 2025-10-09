@@ -5,7 +5,6 @@ import {
     UseGuards,
     Request,
     Get,
-    HttpCode,
 } from "@nestjs/common";
 import { SkipAuth } from "src/common/decorate/skipAuth";
 import { AuthService } from "./auth/auth.service";
@@ -58,8 +57,6 @@ export class AdminController {
     async updatePassword(@Request() request: CustomAdminInRequest, @Body() data: UpdatePasswordDto) {
         const { user } = request;
         const { password, newPassword } = data
-        console.log(data);
-
         await this.adminService.changeUserPassword(user.id, password, newPassword)
         return ({
             message: 'Password changed successfully',

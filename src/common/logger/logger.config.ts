@@ -1,4 +1,3 @@
-// src/common/logger/logger.config.ts
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
 

@@ -10,7 +10,6 @@ import { RequestLoggerMiddleware } from './common/logger/request-logger.middlewa
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  // app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   const logger = app.get(WINSTON_MODULE_NEST_PROVIDER); // 🔹 Lấy Winston logger từ DI
   app.useLogger(logger);
   app.use(new RequestLoggerMiddleware(logger).use);

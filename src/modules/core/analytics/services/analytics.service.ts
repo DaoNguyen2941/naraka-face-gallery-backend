@@ -34,12 +34,10 @@ export class AnalyticsService {
       tasks.push(this.cacheService.incr(`${KEY_CACHE_ANALYTICS.NEW_VISITOR}:${today}`));
     }
 
-    // Chạy song song, log lỗi nếu có
     Promise.all(tasks).catch(err => {
       console.error('Redis trackPageView failed:', err);
     });
 
-    // Trả về ngay cho client
     return { success: true };
   }
 }

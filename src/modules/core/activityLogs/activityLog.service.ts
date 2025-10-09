@@ -6,17 +6,21 @@ import { CreateActivityLogDto } from './dtos/createActivityLogDto';
 import { toVNTime } from 'src/utils/dayjs';
 import { GetActivityLogsDto } from './dtos/getActivityLogs.dto';
 import { PageDto, PageMetaDto } from 'src/common/dtos';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { Inject } from '@nestjs/common';
+import { Logger } from 'winston';
+
 @Injectable()
 export class ActivityLogService {
   constructor(
     @InjectRepository(ActivityLogEntity)
     private readonly logRepo: Repository<ActivityLogEntity>,
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: Logger,
   ) { }
 
   async logAction(dto: CreateActivityLogDto) {
     try {
-      console.log(dto);
-
       const timestamp = toVNTime();
       const slug = `${(dto.description)} / ${timestamp}`;
       const log = this.logRepo.create({
@@ -25,7 +29,7 @@ export class ActivityLogService {
       });
       return await this.logRepo.save(log);
     } catch (error) {
-      console.error('Create Log failed:', error);
+      this.logger.error('Create Log failed:', error);
       throw new InternalServerErrorException('Failed to create Log');
     }
   }

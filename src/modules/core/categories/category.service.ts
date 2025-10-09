@@ -82,8 +82,6 @@ export class CategoryService {
         category.slug = slugify(newName, { lower: true })
         Object.assign(category, data);
         const updated = await this.CategoryRepo.save(category);
-        console.log(updated);
-
         return plainToInstance(DataCategoryDto, updated, {
             excludeExtraneousValues: true,
         });

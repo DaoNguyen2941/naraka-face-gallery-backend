@@ -20,14 +20,4 @@ export class PublicTagController {
         const result = this.tagService.findAll()
         return plainToInstance(PublicTagDto, result, { excludeExtraneousValues: true })
     }
-
-    @Get("/debug-sentry")
-    @SkipAuth()
-    getError() {
-        // Send a log before throwing the error
-        Sentry.logger.info('User triggered test error', {
-            action: 'test_error_endpoint',
-        });
-        throw new Error("My first Sentry error!");
-    }
 }
