@@ -17,6 +17,7 @@ echo "[entrypoint] Loading Docker secrets..."
 # Cloudflare R2
 [ -f /run/secrets/r2_access_key_id ] && export CLOUDFLARE_ACCESS_KEY_ID="$(cat /run/secrets/r2_access_key_id)"
 [ -f /run/secrets/r2_secret_access_key ] && export CLOUDFLARE_SECRET_ACCESS_KEY="$(cat /run/secrets/r2_secret_access_key)"
+[ -f /run/secrets/cloudflare_account_id ] && export CLOUDFLARE_ACCOUNT_ID="$(cat /run/secrets/cloudflare_account_id)"
 
 # Sentry + Entry Auth
 [ -f /run/secrets/sentry_dsn ] && export SENTRY_DSN="$(cat /run/secrets/sentry_dsn)"
@@ -25,7 +26,15 @@ echo "[entrypoint] Loading Docker secrets..."
 # Chờ MySQL (nếu cần)
 if [ -n "$DB_HOST" ] && [ -n "$DB_PORT" ]; then
   echo "[entrypoint] Waiting for DB at $DB_HOST:$DB_PORT..."
-  ./wait-for-it.sh "$DB_HOST:$DB_PORT" -t 60 -- echo "[entrypoint] DB ready!"
+  timeout 60 sh -c "until nc -z $DB_HOST $DB_PORT; do echo 'Waiting for DB...'; sleep 1; done"
+  echo "[entrypoint] DB ready!"
+fi
+
+# Chờ Redis
+if [ -n "$REDIS_HOST" ] && [ -n "$REDIS_PORT" ]; then
+  echo "[entrypoint] Waiting for Redis at $REDIS_HOST:$REDIS_PORT..."
+  timeout 60 sh -c "until nc -z $REDIS_HOST $REDIS_PORT; do echo 'Waiting for Redis...'; sleep 1; done"
+  echo "[entrypoint] Redis ready!"
 fi
 
 echo "[entrypoint] Starting NestJS app..."

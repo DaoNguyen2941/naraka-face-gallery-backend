@@ -18,13 +18,13 @@ RUN npm ci
 COPY . .
 
 # Build project NestJS -> dist/
-RUN npm run build
-
+RUN --mount=type=secret,id=sentry_auth_token \
+    export SENTRY_AUTH_TOKEN=$(cat /run/secrets/sentry_auth_token) && \
+    npm run build
 # ==============================
 # Stage 2: Production image
 # ==============================
 FROM node:20-alpine
-
 WORKDIR /app
 
 # Cài gói cần thiết cho môi trường production
@@ -36,8 +36,7 @@ COPY --from=builder /app/dist ./dist
 
 # Copy script entrypoint + wait-for-it
 COPY ./entrypoint.sh /entrypoint.sh
-COPY ./wait-for-it.sh /wait-for-it.sh
-RUN chmod +x /entrypoint.sh /wait-for-it.sh
+RUN chmod +x /entrypoint.sh
 
 # Expose cổng NestJS
 EXPOSE 3001
