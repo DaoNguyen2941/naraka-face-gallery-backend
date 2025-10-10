@@ -5,14 +5,14 @@ import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser'
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { RequestLoggerMiddleware } from './common/logger/request-logger.middleware';
+// import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+// import { RequestLoggerMiddleware } from './common/logger/request-logger.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const logger = app.get(WINSTON_MODULE_NEST_PROVIDER); // 🔹 Lấy Winston logger từ DI
-  app.useLogger(logger);
-  app.use(new RequestLoggerMiddleware(logger).use);
+  // const logger = app.get(WINSTON_MODULE_NEST_PROVIDER); // 🔹 Lấy Winston logger từ DI
+  // app.useLogger(logger);
+  // app.use(new RequestLoggerMiddleware(logger).use);
 
   app.enableCors({
     origin: true,
@@ -31,7 +31,7 @@ async function bootstrap() {
   }));
 
   await app.listen(PORT, () => {
-    logger.log(`App listening on port ${PORT} ❤️`);
+    console.log(`App listening on port ${PORT} ❤️`);
   });
 }
 bootstrap();

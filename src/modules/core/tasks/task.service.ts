@@ -14,7 +14,7 @@ export class TasksService {
         private readonly faceViewsService: FaceViewsService,
         private readonly trafficService: TrafficAnalysisService,
         private readonly dailyStatisticsService: DailyStatisticsService,
-        @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService
+        // @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService
     ) { }
 
     @Cron(CronExpression.EVERY_5_MINUTES, {
@@ -51,7 +51,7 @@ export class TasksService {
             new_visitor: countNewVisitor || 0
         }
         await this.dailyStatisticsService.save(newData)
-        this.logger.log(`Hourly statistics update for ${today}`);
+        console.log(`Hourly statistics update for ${today}`);
     }
 
     @Cron('5 0 * * *', {
@@ -63,7 +63,7 @@ export class TasksService {
         await this.redisCache.deleteCache(`${KEY_CACHE_ANALYTICS.VISITOR}:${yesterday}`);
         await this.redisCache.deleteCache(`${KEY_CACHE_ANALYTICS.SESSION}:${yesterday}`);
         await this.redisCache.deleteCache(`${KEY_CACHE_ANALYTICS.NEW_VISITOR}:${yesterday}`);
-        this.logger.log(`[Cleanup] Deleted Redis cache for ${yesterday}`);
+        console.log(`[Cleanup] Deleted Redis cache for ${yesterday}`);
     }
 
     @Cron(CronExpression.EVERY_5_MINUTES, {
@@ -87,7 +87,7 @@ export class TasksService {
             await this.faceViewsService.saveFaceView(faceSlug, today, views);
             await this.redisCache.deleteCache(key);
         });
-        this.logger.log(`Flushed Redis counters to DB for ${today}`);
+        console.log(`Flushed Redis counters to DB for ${today}`);
     }
 
     /** SCAN incremental */
@@ -103,7 +103,7 @@ export class TasksService {
                 try {
                     await handler(key);
                 } catch (err) {
-                    this.logger.error(`Error processing key ${key}: ${err}`);
+                    console.error(`Error processing key ${key}: ${err}`);
                 }
             }
         } while (cursor !== '0');

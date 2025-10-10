@@ -13,13 +13,13 @@ import { TasksModule } from './modules/core/tasks/task.module';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { APP_FILTER } from '@nestjs/core';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
-import { LoggerModule } from "./common/logger/logger.module";
+// import { LoggerModule } from "./common/logger/logger.module";
 
 @Module({
   imports: [
     SentryModule.forRoot(),
     UseConfigModule,
-    LoggerModule,
+    // LoggerModule,
     DatabaseModule,
     PassportModule,
     QueueModule,

@@ -10,8 +10,8 @@ import { Logger } from 'winston';
 export class FileProcessor {
   constructor(
     private readonly storageService: StorageService,
-    @Inject(WINSTON_MODULE_NEST_PROVIDER)
-    private readonly logger: Logger,
+    // @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    // private readonly logger: Logger,
   ) { }
 
   @Process(JOB_FILE.DELETE)
@@ -19,7 +19,9 @@ export class FileProcessor {
     try {
       await this.storageService.deleteFile(job.data.key);
     } catch (err) {
-      this.logger.error(`❌ Failed to delete file: ${job.data.key}`, err);
+      // this.logger.error(`❌ Failed to delete file: ${job.data.key}`, err);
+      console.log(`❌ Failed to delete file: ${job.data.key}`, err);
+      
     }
   }
 
@@ -29,7 +31,7 @@ export class FileProcessor {
       try {
         await this.storageService.deleteFile(key);
       } catch (err) {
-        this.logger.error(`❌ Failed to delete file: ${key}`, err);
+        console.error(`❌ Failed to delete file: ${key}`, err);
       }
     }
   }

@@ -15,8 +15,8 @@ export class ActivityLogService {
   constructor(
     @InjectRepository(ActivityLogEntity)
     private readonly logRepo: Repository<ActivityLogEntity>,
-    @Inject(WINSTON_MODULE_NEST_PROVIDER)
-    private readonly logger: Logger,
+    // @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    // private readonly logger: Logger,
   ) { }
 
   async logAction(dto: CreateActivityLogDto) {
@@ -29,7 +29,7 @@ export class ActivityLogService {
       });
       return await this.logRepo.save(log);
     } catch (error) {
-      this.logger.error('Create Log failed:', error);
+      // this.logger.error('Create Log failed:', error);
       throw new InternalServerErrorException('Failed to create Log');
     }
   }
