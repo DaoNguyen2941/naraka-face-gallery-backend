@@ -1,7 +1,4 @@
-// src/modules/analytics/analytics.controller.ts
-import { Controller, Post, Param, Query, Get } from '@nestjs/common';
-import { AnalyticsService } from 'src/modules/core/analytics/services/analytics.service';
-import { ParamsSlugDto } from 'src/common/dtos';
+import { Controller, Query, Get } from '@nestjs/common';
 import { GetDailyStatsDto, GetPageTrafficDto, PageTrafficDto } from 'src/modules/core/analytics/dtos/dailyStatistic.dto';
 import { DailyStatisticsService } from 'src/modules/core/analytics/services';
 import { TrafficAnalysisService } from 'src/modules/core/analytics/services';

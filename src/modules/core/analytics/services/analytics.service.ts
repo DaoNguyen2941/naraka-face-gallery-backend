@@ -1,12 +1,17 @@
 // src/modules/analytics/analytics.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { RedisCacheService } from '../../redis/services/cache.service';
 import { KEY_CACHE_ANALYTICS } from '../constants';
 import { CreatePageviewDto } from 'src/modules/public/Analytics/dtos/analytics.dto';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
+
 @Injectable()
 export class AnalyticsService {
   constructor(
     private readonly cacheService: RedisCacheService,
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: Logger,
   ) { }
 
   async trackFaceViewBySlug(faceSlug: string) {
@@ -14,7 +19,7 @@ export class AnalyticsService {
     const key = `${KEY_CACHE_ANALYTICS.FACE}:${today}:${faceSlug}`;
 
     this.cacheService.incr(key, 86400).catch(err => {
-      console.error('Redis incr face view failed:', err);
+      this.logger.error('Redis incr face view failed:', err);
     });
 
     return { success: true };
@@ -35,7 +40,7 @@ export class AnalyticsService {
     }
 
     Promise.all(tasks).catch(err => {
-      console.error('Redis trackPageView failed:', err);
+      this.logger.error('Redis trackPageView failed:', err);
     });
 
     return { success: true };

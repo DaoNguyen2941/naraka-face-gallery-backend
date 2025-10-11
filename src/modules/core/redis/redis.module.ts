@@ -11,17 +11,11 @@ import redisConfig from 'src/config/register/redis.config';
       load: [redisConfig],
     }),
     RedisModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => {
-        const redis = configService.get('redis'); // namespace
-        return {
-          type: 'single',
-          host: redis.host,
-          port: redis.port,
-          db: redis.db,
-        };
-      },
       inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'single', // hoặc 'cluster'
+        url: `redis://${config.get('redis.host')}:${config.get('redis.port')}`,
+      }),
     }),
   ],
   providers: [RedisCacheService],

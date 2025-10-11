@@ -32,26 +32,21 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');
     }
-
     try {
       const refreshTokenSecret = await this.cacheService.getCache('admin-Refresh-Token');
       if (!refreshTokenSecret) {
         throw new UnauthorizedException('No refresh token stored');
       }
-
-
       const isRefreshTokenMatching = await bcrypt.compare(
         refreshToken,
         refreshTokenSecret
       );
-
       if (!isRefreshTokenMatching) {
         throw new UnauthorizedException('Invalid refresh token');
       }
     } catch (error) {
       throw new ForbiddenException('Invalid refresh token');
     }
-
     const admin: AdminDataDto = { id: payload.sub, username: payload.username };
     return admin;
   }

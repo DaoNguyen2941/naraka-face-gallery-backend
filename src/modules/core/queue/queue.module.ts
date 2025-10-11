@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { BullConfig } from './bull.config';
 import { FileProcessor } from './processor/file.processor';

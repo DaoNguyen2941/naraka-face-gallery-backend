@@ -13,7 +13,6 @@ import { CharacterEntity } from '../../characters/entitys/character.entity';
 import { CategoryEntity } from '../../categories/entitys/category.entity';
 import { TagEntity } from '../../tags/entitys/tag.entity';
 import { FileEntity } from 'src/modules/core/object-storage/entitys/file.entity';
-import { AnalyticsFaceViewsEntity } from '../../analytics/entities/analyticsFaceViews.entity';
 @Entity('faces')
 export class FaceEntity extends BaseEntity {
   @Column()

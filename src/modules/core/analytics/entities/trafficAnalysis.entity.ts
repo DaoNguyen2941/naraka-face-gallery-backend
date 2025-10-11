@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, Column } from 'typeorm';
 import { BaseEntity } from 'src/common/entities/base.entity';
 @Entity('traffic_analysis')
 export class TrafficAnalysisEntity extends BaseEntity {

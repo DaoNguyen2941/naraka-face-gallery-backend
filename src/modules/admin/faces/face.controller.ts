@@ -150,7 +150,6 @@ export class AdminFaceController {
         @Request() request: CustomAdminInRequest,
         @Req() req: Request,
         @Ip() ip: string,)
-    // : Promise<DataFaceDto>
     {
         const { id } = params
         const admin = request.user;

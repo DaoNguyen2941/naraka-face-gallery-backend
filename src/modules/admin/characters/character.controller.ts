@@ -3,7 +3,6 @@ import {
     Get,
     Post,
     Put,
-    Patch,
     Delete,
     Param,
     Body,

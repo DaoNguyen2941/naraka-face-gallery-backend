@@ -6,7 +6,7 @@ import { StorageService } from '../object-storage/storage.service';
 import { createGlobalFaceLock, createCNFaceLock } from 'src/utils/generate-face-key.util';
 import slugify from 'slugify';
 import { FileUsage } from '../object-storage/enums/file-usage.enum';
-import { CreateFaceDto, UpdateFaceDto, GroupFile, FacePageOptionsDto, FaceWithViewsDto } from './dtos';
+import { CreateFaceDto, UpdateFaceDto, GroupFile, FacePageOptionsDto } from './dtos';
 import { TagService } from '../tags/tag.service';
 import { CharactersService } from '../characters/characters.service';
 import { CategoryService } from '../categories/category.service';

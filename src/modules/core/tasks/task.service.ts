@@ -17,7 +17,8 @@ export class TasksService {
         @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: LoggerService
     ) { }
 
-    @Cron(CronExpression.EVERY_5_MINUTES, {
+    //thống kê hàng ngày (mỗi giờ)
+    @Cron(CronExpression.EVERY_HOUR, {
         timeZone: 'Asia/Ho_Chi_Minh',
     })
     async flushHourlyStats() {
@@ -54,6 +55,7 @@ export class TasksService {
         this.logger.log(`Hourly statistics update for ${today}`);
     }
 
+    // làm sạch cache redis 00h05
     @Cron('5 0 * * *', {
         timeZone: 'Asia/Ho_Chi_Minh',
     })
@@ -66,7 +68,9 @@ export class TasksService {
         this.logger.log(`[Cleanup] Deleted Redis cache for ${yesterday}`);
     }
 
-    @Cron(CronExpression.EVERY_5_MINUTES, {
+
+    // cập nhập views face-qr mỗi giờ
+    @Cron(CronExpression.EVERY_HOUR, {
         timeZone: 'Asia/Ho_Chi_Minh',
     })
     async updateFaceViewHourly() {
