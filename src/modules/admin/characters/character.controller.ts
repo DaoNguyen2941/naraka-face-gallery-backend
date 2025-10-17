@@ -33,15 +33,17 @@ export class AdminCharactersController {
     }
 
     @Post()
-    @UseInterceptors(FileInterceptor('file'))
+    @UseInterceptors(FileInterceptor('file', {
+        limits: { fileSize: 5 * 1024 * 1024 }, // Multer
+    }))
     async create(
         @Body() data: CreateCharacterDto, @UploadedFile(
             new ParseFilePipeBuilder()
                 .addFileTypeValidator({
                     fileType: 'image'
                 })
-                .addMaxSizeValidator({ maxSize: 5_000_000 })
-               .build({
+                .addMaxSizeValidator({ maxSize: 5 * 1024 * 1024 })
+                .build({
                     errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
                     fileIsRequired: false,
                     exceptionFactory: (errors) => {
@@ -73,7 +75,9 @@ export class AdminCharactersController {
     }
 
     @Put(':id')
-    @UseInterceptors(FileInterceptor('avatar'))
+    @UseInterceptors(FileInterceptor('avatar', {
+        limits: { fileSize: 15 * 1024 * 1024 },
+    }))
     update(
         @Request() request: CustomAdminInRequest,
         @Req() req: Request,
@@ -83,7 +87,7 @@ export class AdminCharactersController {
         @UploadedFile(
             new ParseFilePipeBuilder()
                 .addFileTypeValidator({ fileType: 'image' })
-                .addMaxSizeValidator({ maxSize: 5_000_000 })
+                .addMaxSizeValidator({ maxSize: 5 * 1024 * 1024 })
                 .build({
                     errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
                     fileIsRequired: false,

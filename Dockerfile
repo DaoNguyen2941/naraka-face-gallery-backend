@@ -46,3 +46,4 @@ ENV NODE_ENV=production
 
 # Lệnh khởi chạy chính
 ENTRYPOINT ["/entrypoint.sh"]
+ 

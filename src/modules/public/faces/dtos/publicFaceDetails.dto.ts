@@ -36,7 +36,7 @@ export class PublicFaceDetails {
   )
   tags: string[];
 
-  
+
   @ApiProperty({ type: [String] })
   @Expose()
   @Transform(({ obj }) =>
@@ -44,13 +44,12 @@ export class PublicFaceDetails {
   )
   imageReviews: string[];
 
-  @ApiProperty({ type: String })
+  @ApiProperty({ type: String, required: false })
   @Expose()
   @IsString()
-  @Transform(({ obj }) => {
-    return obj.qrCodeCN.url
-  })
-  qrCodeCN?: string;
+  @Transform(({ obj }) => obj.qrCodeCN?.url || null)
+  qrCodeCN?: string | null;
+
 
   @ApiProperty({ type: () => DataFileDto, required: false })
   @Expose()

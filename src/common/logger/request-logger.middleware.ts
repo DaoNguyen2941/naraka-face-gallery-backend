@@ -20,7 +20,7 @@ export class RequestLoggerMiddleware implements NestMiddleware {
 
       if (statusCode >= 400) {
         const msg = `${method} ${originalUrl} ${statusCode} - ${duration}ms`;
-        this.logger.warn(msg, { context: 'HTTP' });
+        // this.logger.warn(msg, { context: 'HTTP' });
         if (statusCode >= 500) {
           Sentry.captureMessage(msg);
         }

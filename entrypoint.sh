@@ -23,7 +23,11 @@ echo "[entrypoint] Loading Docker secrets..."
 [ -f /run/secrets/sentry_dsn ] && export SENTRY_DSN="$(cat /run/secrets/sentry_dsn)"
 [ -f /run/secrets/sentry_auth_token ] && export SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"
 
-# Chờ MySQL (nếu cần)
+# ==============================
+# WAIT FOR SERVICES
+# ==============================
+
+# Chờ MySQL 
 if [ -n "$DB_HOST" ] && [ -n "$DB_PORT" ]; then
   echo "[entrypoint] Waiting for DB at $DB_HOST:$DB_PORT..."
   timeout 60 sh -c "until nc -z $DB_HOST $DB_PORT; do echo 'Waiting for DB...'; sleep 1; done"
@@ -37,5 +41,19 @@ if [ -n "$REDIS_HOST" ] && [ -n "$REDIS_PORT" ]; then
   echo "[entrypoint] Redis ready!"
 fi
 
+# ==============================
+# RUN MIGRATIONS
+# ==============================
+echo "[entrypoint] Running TypeORM migrations..."
+if npx typeorm migration:run -d ./dist/data-source.js; then
+  echo "[entrypoint] ✅ Migrations completed successfully."
+else
+  echo "[entrypoint] ⚠️ Migration failed — continuing startup anyway."
+fi
+
+
+# ==============================
+# START APP
+# ==============================
 echo "[entrypoint] Starting NestJS app..."
 exec node dist/main.js
