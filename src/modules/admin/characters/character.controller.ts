@@ -34,7 +34,7 @@ export class AdminCharactersController {
 
     @Post()
     @UseInterceptors(FileInterceptor('file', {
-        limits: { fileSize: 5 * 1024 * 1024 }, // Multer
+        limits: { fileSize: 15 * 1024 * 1024 }, // Multer
     }))
     async create(
         @Body() data: CreateCharacterDto, @UploadedFile(
@@ -42,7 +42,7 @@ export class AdminCharactersController {
                 .addFileTypeValidator({
                     fileType: 'image'
                 })
-                .addMaxSizeValidator({ maxSize: 5 * 1024 * 1024 })
+                .addMaxSizeValidator({ maxSize: 10 * 1024 * 1024 })
                 .build({
                     errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
                     fileIsRequired: false,

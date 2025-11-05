@@ -75,7 +75,7 @@ export class AdminFaceController {
         // Tạo pipe để validate từng file
         const pipe = new ParseFilePipeBuilder()
             .addFileTypeValidator({ fileType: 'image' })
-            .addMaxSizeValidator({ maxSize: 10_000_000 }) // 10MB
+            .addMaxSizeValidator({ maxSize: 10 * 1024 * 1024 }) // 10MB
             .build({
                 errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
             });
@@ -86,8 +86,6 @@ export class AdminFaceController {
             ...imageReviews.map(file => pipe.transform(file)),
         ]);
 
-
-        // Gọi service xử lý
         return this.faceService.create(data, contextLog, imageReviews, qrCodeGlobals, qrCodeCN);
     }
 
@@ -124,7 +122,7 @@ export class AdminFaceController {
         // Tạo pipe để validate từng file
         const pipe = new ParseFilePipeBuilder()
             .addFileTypeValidator({ fileType: 'image' })
-            .addMaxSizeValidator({ maxSize: 10_000_000 }) // 10MB
+            .addMaxSizeValidator({ maxSize: 10 * 1024 * 1024 }) // 10MB
             .build({
                 errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
             });

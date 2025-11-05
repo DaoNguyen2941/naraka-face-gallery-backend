@@ -153,7 +153,7 @@ services:
     image: mysql:8
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: narakaqrface
+      MYSQL_DATABASE: myDatabase
     ports:
       - "3306:3306"
 
