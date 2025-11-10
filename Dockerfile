@@ -18,9 +18,8 @@ RUN npm ci
 COPY . .
 
 # Build project NestJS -> dist/
-RUN --mount=type=secret,id=sentry_auth_token \
-    export SENTRY_AUTH_TOKEN=$(cat /run/secrets/sentry_auth_token) && \
-    npm run build
+RUN npm run build
+
 # ==============================
 # Stage 2: Production image
 # ==============================

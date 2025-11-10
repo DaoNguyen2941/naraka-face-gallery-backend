@@ -1,12 +1,20 @@
 import { serialize, SerializeOptions } from 'cookie';
 
-export function createCookie(name: string, value: string, path: string | undefined, maxAge: number | undefined): string {
+export function createCookie(
+  name: string,
+  value: string,
+  path?: string,
+  maxAge?: number
+): string {
+  const domain = process.env.FRONTEND_DOMAIN;
   const cookieOptions: SerializeOptions = {
-    httpOnly: true, // Chỉ có thể được truy cập qua HTTP(S) và không thông qua JavaScript
-    secure: true,
-    sameSite: `strict`, // Ngăn chặn việc gửi cookie từ trang web của một tên miền đến trang web của một tên miền khác
-    maxAge: maxAge ? maxAge * 1000 : undefined, // Tuỳ chọn: thời gian sống của cookie trong giây
-    path: path, // Tuỳ chọn: đường dẫn của cookie
+    httpOnly: true,                        // chỉ truy cập qua HTTP(S)
+    secure: true,                          // cookie chỉ gửi qua HTTPS
+    sameSite: "none",                     // hoặc 'none' nếu cross-site
+    maxAge: maxAge ? maxAge : undefined,
+    path: path || "/",                      // mặc định path = "/"
+    ...(domain ? { domain: domain.startsWith(".") ? domain : `.${domain}` } : {}),
   };
+
   return serialize(name, value, cookieOptions);
 }

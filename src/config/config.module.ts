@@ -42,7 +42,7 @@ export const UseConfigModule = ConfigModule.forRoot({
         SENTRY_PROJECT: Joi.string(),
         
         NODE_ENV: Joi.string(),
-
+        FRONTEND_DOMAIN: Joi.string().domain({ allowUnicode: false }).optional(),
     })
 
 })

@@ -14,8 +14,10 @@ async function bootstrap() {
   app.useLogger(logger);
   app.use(new RequestLoggerMiddleware(logger).use);
 
+  const allowedOrigins = process.env.CORS_ORIGIN?.split(',').map(o => o.trim()) || [];
+
   app.enableCors({
-    origin: true,
+    origin: allowedOrigins,
     credentials: true,
   });
 
